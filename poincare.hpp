@@ -345,7 +345,7 @@ public:
       midP(i,2) = midVector( vectorField( midCenterVector ) )[i-1];
     }
     
-    cout << returnTime2 << "\n" << monodromyMatrix << "\n" << midP << "\n" << P1 << "\n" << inverseMatrix(midP) << "\n";
+   // cout << returnTime2 << "\n" << monodromyMatrix << "\n" << midP << "\n" << P1 << "\n" << inverseMatrix(midP) << "\n";
   }
 
 

@@ -37,8 +37,8 @@ void FhnVerifyExistenceOfPeriodicOrbit( interval _theta, interval _eps, bool _ve
     interval ruDL(0.011);           // distances from appropriate sections in appropr. direction (stable for sections to integrate from, unstable for sections to integrate onto)
     interval rsUL(0.01);         
 
-    interval ruUR(0.0015);
-    interval rsDR(0.028);
+    interval ruUR(0.011);
+    interval rsDR(0.01);
 
     IMatrix PUL( coordChange( Fhn_vf, GammaUL ) ), 
             PUR( coordChange( Fhn_vf, GammaUR ) ), 
@@ -48,8 +48,8 @@ void FhnVerifyExistenceOfPeriodicOrbit( interval _theta, interval _eps, bool _ve
     FhnPoincareMap *PMAPL;
     FhnPoincareMap *PMAPR;
     
-    midPoincareMap testMap( parameters, Fhn_vf_withParams, Fhn_vf_withParams_rev, PDL, PUL, GammaDL, GammaUL, ruDL, rsUL, -1., 60 );
-    
+    midPoincareMap leftMap( parameters, Fhn_vf_withParams, Fhn_vf_withParams_rev, PDL, PUL, GammaDL, GammaUL, ruDL, rsUL, -1., _pMapDivCount );
+    midPoincareMap rightMap( parameters, Fhn_vf_withParams, Fhn_vf_withParams_rev, PUR, PDR, GammaUR, GammaDR, ruUR, rsDR, 1., _pMapDivCount );
 
 
     if( withParams )
@@ -66,10 +66,10 @@ void FhnVerifyExistenceOfPeriodicOrbit( interval _theta, interval _eps, bool _ve
     IVector setToIntegrateDL(2);
     IVector setToIntegrateUR(2);
 
-    setToIntegrateDL[0] = 1.0e-3*interval(-1,1);  // this is ys at downleft corner  
-    setToIntegrateDL[1] = 1.0e-3*interval(-1,1);  // this is v at downleft corner
+    setToIntegrateDL[0] = 1.0e-4*interval(-1,1);  // this is ys at downleft corner  
+    setToIntegrateDL[1] = 1.0e-4*interval(-1,1);  // this is v at downleft corner
 
-    setToIntegrateUR[0] = 1.0e-3*interval(-1,1);  // this is ys at upright corner
+    setToIntegrateUR[0] = 1.0e-4*interval(-1,1);  // this is ys at upright corner
     setToIntegrateUR[1] = 1.0e-4*interval(-1,1);  // this is v at upright corner
 
     // sets to integrate backwards - only with the parameter _midsection = 1 on
@@ -77,15 +77,16 @@ void FhnVerifyExistenceOfPeriodicOrbit( interval _theta, interval _eps, bool _ve
     IVector setToBackIntegrateUL(2);
     IVector setToBackIntegrateDR(2);
 
-    setToBackIntegrateUL[0] = 0.4*1.0e-3*interval(-1,1);     // this is v at upleft corner
-    setToBackIntegrateUL[1] = 1.0e-3*interval(-1,1);     // this is yu at upleft corner
+    setToBackIntegrateUL[0] = 0.4*1.0e-4*interval(-1,1);     // this is v at upleft corner
+    setToBackIntegrateUL[1] = 1.0e-4*interval(-1,1);         // this is yu at upleft corner
 
-    setToBackIntegrateDR[0] = 1.0e-3*interval(-1,1);      
-    setToBackIntegrateDR[1] = 1.0e-4*interval(-1,1);     
+    setToBackIntegrateDR[0] = 0.4*1.0e-4*interval(-1,1);     // this is v at downright corner 
+    setToBackIntegrateDR[1] = 1.0e-4*interval(-1,1);        // this is yu at downright corner
 
     // left corner segments/coverings
   
-    cout << testMap.checkCovering( setToIntegrateDL, setToBackIntegrateUL ) << "! \n";
+    cout << leftMap.checkCovering( setToIntegrateDL, setToBackIntegrateUL ) << "! \n";
+    cout << rightMap.checkCovering( setToIntegrateUR, setToBackIntegrateDR ) << "! \n";
 
     IVector PMAPL_leftU = (*PMAPL)( leftU(setToIntegrateDL) );
     IVector PMAPL_rightU = (*PMAPL)( rightU(setToIntegrateDL) );
