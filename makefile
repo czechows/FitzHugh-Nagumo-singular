@@ -13,7 +13,7 @@ CAPDLIBS = `${CAPDBINDIR}capd-config --libs`
 CXXFLAGS += ${CAPDFLAGS} -O2 -Wall --std=c++11
 
 # directory where object and dependancy files will be created
-OBJDIR = ../fhnRun/.obj/
+OBJDIR = .obj/
 
 #============ the following should not be changed =========
 
