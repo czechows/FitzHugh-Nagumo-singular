@@ -34,11 +34,11 @@ void FhnVerifyExistenceOfPeriodicOrbit( interval _theta, interval _eps, bool _ve
     if( !(GammaUL[0] > GammaDL[0] && GammaUR[0] > GammaDR[0] && GammaUR[2] > GammaUL[2] && GammaDR[2] > GammaDL[2] ) )
       throw "NEWTON CORRECTION METHOD FOR CORNER POINTS ERROR! \n";
         
-    interval ruDL(0.008);           // distances from appropriate sections in appropr. direction (stable for sections to integrate from, unstable for sections to integrate onto)
-    interval rsUL(0.008);         
+    interval ruDL(0.03);           // distances from appropriate sections in appropr. direction (stable for sections to integrate from, unstable for sections to integrate onto)
+    interval rsUL(0.05);         
 
-    interval ruUR(0.008);
-    interval rsDR(0.008);
+    interval ruUR(0.03);
+    interval rsDR(0.05);
 
     IMatrix PUL( coordChange( Fhn_vf, GammaUL ) ), 
             PUR( coordChange( Fhn_vf, GammaUR ) ), 
@@ -51,22 +51,22 @@ void FhnVerifyExistenceOfPeriodicOrbit( interval _theta, interval _eps, bool _ve
     IVector setToIntegrateDL(2);
     IVector setToIntegrateUR(2);
 
-    setToIntegrateDL[0] = 6.0e-3*interval(-1,1);  // this is ys at downleft corner  
-    setToIntegrateDL[1] = 3.0e-3*interval(-1,1);  // this is v at downleft corner
+    setToIntegrateDL[0] = 1.4e-2*interval(-1,1);  // this is ys at downleft corner  
+    setToIntegrateDL[1] = 5.0e-3*interval(-1,1);  // this is v at downleft corner
 
-    setToIntegrateUR[0] = 6.0e-3*interval(-1,1);  // this is ys at upright corner
-    setToIntegrateUR[1] = 3.0e-3*interval(-1,1);  // this is v at upright corner
+    setToIntegrateUR[0] = 1.4e-2*interval(-1,1);  // this is ys at upright corner
+    setToIntegrateUR[1] = 5.5e-3*interval(-1,1);  // this is v at upright corner
 
     // sets to integrate backwards - only with the parameter _midsection = 1 on
 
     IVector setToBackIntegrateUL(2);
     IVector setToBackIntegrateDR(2);
 
-    setToBackIntegrateUL[0] = 2.0e-3*interval(-1,1);     // this is v at upleft corner
-    setToBackIntegrateUL[1] = 6.0e-3*interval(-1,1);         // this is yu at upleft corner
+    setToBackIntegrateUL[0] = 3.0e-3*interval(-1,1);     // this is v at upleft corner
+    setToBackIntegrateUL[1] = 1.0e-2*interval(-1,1);         // this is yu at upleft corner
 
-    setToBackIntegrateDR[0] = 2.0e-3*interval(-1,1);     // this is v at downright corner 
-    setToBackIntegrateDR[1] = 6.0e-3*interval(-1,1);        // this is yu at downright corner
+    setToBackIntegrateDR[0] = 3.0e-3*interval(-1,1);     // this is v at downright corner 
+    setToBackIntegrateDR[1] = 1.0e-2*interval(-1,1);        // this is yu at downright corner
 
     // covering checks 
 

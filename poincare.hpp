@@ -311,7 +311,7 @@ public:
     midSection( midCenterVector, midCenterVector ),
     vectorFieldRev( _vectorFieldRev )
   {
-    ICoordinateSection tempSection( dim, 0, ( (50./100.)*_GammaU1[0] + (50./100.)*_GammaU2[0] ) ); // an auxiliary section u = ( GammaU1[0] + GammaU2[0] )/2
+    ICoordinateSection tempSection( dim, 0, ( (93./100.)*_GammaU1[0] + (7./100.)*_GammaU2[0] ) ); // an auxiliary section u = ( GammaU1[0] + GammaU2[0] )/2
     ITaylor tempSolver( vectorField, order );
     IPoincareMap tempPM( tempSolver, tempSection );
     interval returnTime;
@@ -458,23 +458,24 @@ public:
     IVector PSetUL1( integrateToMidSection( leftU(Set1), 0 ) );
     IVector PSetUR1( integrateToMidSection( rightU(Set1), 0 ) );
 
-    cout << PSet1 << " -- " << PSetUL1 << " -- " << PSetUR1 << "\n";
-
     IVector PSet2( integrateToMidSection( Set2 , 1 ) );
     IVector PSetSL2( integrateToMidSection( leftS(Set2), 1 ) );
     IVector PSetSR2( integrateToMidSection( rightS(Set2), 1 ) );
- 
-    cout << PSet2 << " -- " << PSetSL2 << " -- " << PSetSR2 << "\n";
- 
+
+    IVector setToBackCover( shrinkAndExpand( PSet1, 1. + EPS ) );       // we define a set that is covered by midPM( Set1 ), shrinkAndExpand adjust stable direction
+    setToBackCover[1] = interval( (PSetUL1[1] + EPS).rightBound(), (PSetUR1[1] - EPS).leftBound() );    // here we adjust the unstable direction
+   
+    cout << "PSetSL2[0] <? setToBackCover[0].leftBound() " <<  PSetSL2[0].rightBound() << " " << setToBackCover[0].leftBound() << "\n";
+    cout << "PSetSR2[0] >? setToBackCover[0].rightBound() " <<  PSetSR2[0].leftBound() << " " << setToBackCover[0].rightBound() << "\n";
+    cout << "subsetInterior( PSet2[1], setToBackCover[1] )? " << PSet2[1] << " " << setToBackCover[1] << "\n";
+
+
     if( !( PSetUL1[1] + EPS < 0. && PSetUR1[1] - EPS > 0. && PSetSL2[0] + EPS < 0. && PSetSR2[0] - EPS > 0. ) )  // some reality checks for hyperbolicity
      throw "INTEGRATION TO MIDSECTION ERROR 1! \n";
    
-    IVector setToBackCover( shrinkAndExpand( PSet1, 1. + EPS ) );       // we define a set that is covered by midPM( Set1 ), shrinkAndExpand adjust stable direction
-    setToBackCover[1] = interval( (PSetUL1[1] + EPS).rightBound(), (PSetUR1[1] - EPS).leftBound() );    // here we adjust the unstable direction
-  
+ 
     if( !( containsZero( PSet1 ) && containsZero( PSet2 ) && containsZero( setToBackCover ) ) )     // some of these "reality checks" may be redundant but better to have them
       throw "INTEGRATION TO MIDSECTION ERROR 2! \n";                                                  // to ensure all alignments are correct
-   
 
     if( PSetSL2[0] < setToBackCover[0].leftBound() && PSetSR2[0] > setToBackCover[0].rightBound() && subsetInterior( PSet2[1], setToBackCover[1] ) )
       return 1;

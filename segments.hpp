@@ -235,6 +235,9 @@ public:
 };
 
 
+// ------------------------ class longIsolatingSegment ------------------------
+
+
 class longIsolatingSegment : public FhnIsolatingSegment
 {
 public:
