@@ -11,7 +11,7 @@
 
 
 void FhnVerifyExistenceOfPeriodicOrbit( interval _theta, interval _eps, bool _verbose = 0, bool withParams = 0, int _pMapDivCount = 40, 
-     int _longSubsegmentCount = 100, int _longSegmentDivCount = 100, int _cornerSegmentDivCount = 500 ) 
+     int _longSubsegmentCount = 100, int _longSegmentDivCount = 120, int _cornerSegmentDivCount = 500 ) 
   // verbose on displays all the interval enclosures for Poincare maps / products of vector fields with normals; other parameters control respectively: 
   // number of subdivisions of sets to integrate (in each dimension), number of subsegments along slow manifolds, number of subdivisions of regular/corner segments
   // for evaluation of the scalar product of vector field with outward pointing normals
@@ -38,10 +38,10 @@ void FhnVerifyExistenceOfPeriodicOrbit( interval _theta, interval _eps, bool _ve
       throw "NEWTON CORRECTION METHOD FOR CORNER POINTS ERROR! \n";
         
     interval ruDL(0.03);           // distances from appropriate sections in appropr. direction (stable for sections to integrate from, unstable for sections to integrate onto)
-    interval rsUL(0.05);         
+    interval rsUL(0.048);         
 
-    interval ruUR(0.038);
-    interval rsDR(0.05);
+    interval ruUR(0.039);
+    interval rsDR(0.04);
 
     IMatrix PUL( coordChange( Fhn_vf, GammaUL ) ), 
             PUR( coordChange( Fhn_vf, GammaUR ) ), 
