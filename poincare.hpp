@@ -225,7 +225,7 @@ public:
           for( int k=3; k < dim; k++ )
             Set_ij[k] = 0.; // params[k-3];      // we embed parameters  */ // this part of code is probably deprecated since we embedded the parameters in the constructor
 
-        C0Rect2Set setAff( section1CenterVector, P1, Set_ij ); // the set moved to default space, observe that parameters remain unchanged
+        C0HOTripletonSet setAff( section1CenterVector, P1, Set_ij ); // the set moved to default space, observe that parameters remain unchanged
 
         interval returntime(0.);
         IVector result = pm( setAff, GammaU2, inverseMatrix(P2), returntime ); // result is moved back to local coordinates, ys should be close to 0 
@@ -274,11 +274,11 @@ public:
     midSection( midCenterVector, midCenterVector ),
     vectorFieldRev( _vectorFieldRev )
   {
-    ICoordinateSection tempSection( dim, 0, ( (50./100.)*_GammaU1[0] + (50./100.)*_GammaU2[0] ) ); // an auxiliary section u = ( GammaU1[0] + GammaU2[0] )/2
+    ICoordinateSection tempSection( dim, 0, ( (93./100.)*_GammaU1[0] + (7./100.)*_GammaU2[0] ) ); // an auxiliary section u = ( GammaU1[0] + GammaU2[0] )/2
     ITaylor tempSolver( vectorField, order );
     IPoincareMap tempPM( tempSolver, tempSection );
     interval returnTime;
-    C0Rect2Set C0TempCenterSet( section1CenterVector );
+    C0HOTripletonSet C0TempCenterSet( section1CenterVector );
 
     midCenterVector = tempPM( C0TempCenterSet, returnTime );
     midSection.setOrigin( midVector(midCenterVector) );
@@ -289,7 +289,7 @@ public:
     ITaylor tempSolver2( vectorField, order );
     C1Rect2Set C1TempCenterSet( section1CenterVector );
 
-    IPoincareMap tempPM2( tempSolver, midSection );
+    IPoincareMap tempPM2( tempSolver2, midSection );
     IVector tempVect = tempPM2( C1TempCenterSet, monodromyMatrix, returnTime2 );
 
     midP = ( tempPM2.computeDP( tempVect, monodromyMatrix, returnTime2 ) )*P1;        // new coordinates are variational equations eval. at identity matrix times original matrix P1
@@ -311,11 +311,11 @@ public:
     midSection( midCenterVector, midCenterVector ),
     vectorFieldRev( _vectorFieldRev )
   {
-    ICoordinateSection tempSection( dim, 0, ( (93./100.)*_GammaU1[0] + (7./100.)*_GammaU2[0] ) ); // an auxiliary section u = ( GammaU1[0] + GammaU2[0] )/2
+    ICoordinateSection tempSection( dim, 0, ( (945./1000.)*_GammaU1[0] + (55./1000.)*_GammaU2[0] ) ); // an auxiliary section u = ( GammaU1[0] + GammaU2[0] )/2
     ITaylor tempSolver( vectorField, order );
     IPoincareMap tempPM( tempSolver, tempSection );
     interval returnTime;
-    C0Rect2Set C0TempCenterSet( section1CenterVector );
+    C0HOTripletonSet C0TempCenterSet( section1CenterVector );
 
     midCenterVector = tempPM( C0TempCenterSet, returnTime );
     midSection.setOrigin( midVector(midCenterVector) );
@@ -345,7 +345,6 @@ public:
       midP(i,2) = midVector( vectorField( midCenterVector ) )[i-1];
     }
     
-   // cout << returnTime2 << "\n" << monodromyMatrix << "\n" << midP << "\n" << P1 << "\n" << inverseMatrix(midP) << "\n";
   }
 
 
@@ -363,8 +362,6 @@ public:
 
     IVector resultArr(2);
  
-    interval mtest;
-
     int disc_i;
     int disc_j;
 
@@ -400,50 +397,39 @@ public:
           Set_ij[2] = ( theSet[0].rightBound() - theSet[0].leftBound() )*ti + theSet[0].leftBound();    // subdivision of v coordinate
           Set_ij[1] = ( theSet[1].rightBound() - theSet[1].leftBound() )*tj + theSet[1].leftBound();    // subdivision of yu coordinate
         }
+        
 
  /*       if( dim > 3 )  // checks whether we have parameters
           for( int k=3; k < dim; k++ )
             Set_ij[k] = params[k-3];      // we embed parameters  DEPRECATED
 */
-        C0Rect2Set *setAff;
+        C0HOTripletonSet *setAff;
 
         if( !dir )
-          setAff = new C0Rect2Set( section1CenterVector, P1, Set_ij ); // the set moved to default space, observe that parameters remain unchanged
+          setAff = new C0HOTripletonSet( section1CenterVector, P1, Set_ij ); // the set moved to default space, observe that parameters remain unchanged
         else
-          setAff = new C0Rect2Set( section2CenterVector, P2, Set_ij );
-
+          setAff = new C0HOTripletonSet( section2CenterVector, P2, Set_ij );
+        
+  
         interval returntime(0.);
         IVector result = (*midPM)( *setAff, midCenterVector, inverseMatrix(midP), returntime );     // result is moved back to local coordinates, yu should be close to 0 
                                                                                             // in other words midP^-1( PM(setAff) - midCenterVector ) is computed 
                                                                                             // WARNING! THIS ZEROES PARAMETERS SO AS SUCH RESULT SHOULD NOT BE USED,
                                                                                             // ONLY FIRST 3 COORDINATES OF IT (RETURNED BY THIS FUNCTION) CAN BE USED
+        
+
         delete setAff;
-      //  if( !dir )
-      //  {
-          if( i==1 && j==1)
-          {
-            resultArr[0] = result[0];   // midSection coordinates are given by midP - matrix P1 evolved by var. equation so similarly to P1 we project to ys, v coords, v "unstable"
-            resultArr[1] = result[2];  
-          }
-          else
-          {
-            resultArr[0] = intervalHull(resultArr[0], result[0]);
-            resultArr[1] = intervalHull(resultArr[1], result[2]);
-          }
-      /*  }
+ 
+        if( i==1 && j==1)
+        {
+          resultArr[0] = result[0];   // midSection coordinates are given by midP - matrix P1 evolved by var. equation so similarly to P1 we project to ys, v coords, v "unstable"
+          resultArr[1] = result[2];  
+        }
         else
         {
-          if( i==1 && j==1)
-          {
-            resultArr[0] = result[2];   // midSection coordinates are given by midP - matrix P1 evolved by var. equation so similarly to P1 we project to ys, v coords, v "unstable"
-            resultArr[1] = result[0];  
-          }
-          else
-          {
-            resultArr[0] = intervalHull(resultArr[0], result[2]);
-            resultArr[1] = intervalHull(resultArr[1], result[0]);
-          }
-        }*/
+          resultArr[0] = intervalHull(resultArr[0], result[0]);
+          resultArr[1] = intervalHull(resultArr[1], result[2]);
+        }
       }
     }
     delete midPM;
@@ -461,6 +447,7 @@ public:
     IVector PSet2( integrateToMidSection( Set2 , 1 ) );
     IVector PSetSL2( integrateToMidSection( leftS(Set2), 1 ) );
     IVector PSetSR2( integrateToMidSection( rightS(Set2), 1 ) );
+
 
     IVector setToBackCover( shrinkAndExpand( PSet1, 1. + EPS ) );       // we define a set that is covered by midPM( Set1 ), shrinkAndExpand adjust stable direction
     setToBackCover[1] = interval( (PSetUL1[1] + EPS).rightBound(), (PSetUR1[1] - EPS).leftBound() );    // here we adjust the unstable direction

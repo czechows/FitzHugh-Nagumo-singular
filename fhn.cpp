@@ -40,10 +40,11 @@ int main(){
   cout.precision(9);
 
   interval theta = interval(61.)/100.; // theta = 0.53 also works
-  interval eps = interval(0.,1.)/5e4; //interval(0.,1.)/2e6;
+  interval eps = interval(0.,1.)/2e4; //interval(0.,1.)/2e6;
   bool verbose = 1; 
+  bool with_params = 0;
   
-  FhnVerifyExistenceOfPeriodicOrbit( theta, eps, verbose, 1 );
+  FhnVerifyExistenceOfPeriodicOrbit( theta, eps, verbose, with_params );
  // FhnVerifyExistenceOfPeriodicOrbit( theta, eps, verbose );
 
 //  theta = interval(63.)/100;
