@@ -225,7 +225,7 @@ public:
           for( int k=3; k < dim; k++ )
             Set_ij[k] = 0.; // params[k-3];      // we embed parameters  */ // this part of code is probably deprecated since we embedded the parameters in the constructor
 
-        C0HOTripletonSet setAff( section1CenterVector, P1, Set_ij ); // the set moved to default space, observe that parameters remain unchanged
+        COHOTripletonSet setAff( section1CenterVector, P1, Set_ij ); // the set moved to default space, observe that parameters remain unchanged
 
         interval returntime(0.);
         IVector result = pm( setAff, GammaU2, inverseMatrix(P2), returntime ); // result is moved back to local coordinates, ys should be close to 0 
@@ -274,11 +274,11 @@ public:
     midSection( midCenterVector, midCenterVector ),
     vectorFieldRev( _vectorFieldRev )
   {
-    ICoordinateSection tempSection( dim, 0, ( (93./100.)*_GammaU1[0] + (7./100.)*_GammaU2[0] ) ); // an auxiliary section u = ( GammaU1[0] + GammaU2[0] )/2
+    ICoordinateSection tempSection( dim, 0, ( (920./1000.)*_GammaU1[0] + (80./1000.)*_GammaU2[0] ) ); // an auxiliary section u = ( GammaU1[0] + GammaU2[0] )/2
     ITaylor tempSolver( vectorField, order );
     IPoincareMap tempPM( tempSolver, tempSection );
     interval returnTime;
-    C0HOTripletonSet C0TempCenterSet( section1CenterVector );
+    COHOTripletonSet C0TempCenterSet( section1CenterVector );
 
     midCenterVector = tempPM( C0TempCenterSet, returnTime );
     midSection.setOrigin( midVector(midCenterVector) );
@@ -311,11 +311,11 @@ public:
     midSection( midCenterVector, midCenterVector ),
     vectorFieldRev( _vectorFieldRev )
   {
-    ICoordinateSection tempSection( dim, 0, ( (945./1000.)*_GammaU1[0] + (55./1000.)*_GammaU2[0] ) ); // an auxiliary section u = ( GammaU1[0] + GammaU2[0] )/2
+    ICoordinateSection tempSection( dim, 0, ( (920./1000.)*_GammaU1[0] + (80./1000.)*_GammaU2[0] ) ); // an auxiliary section u = ( GammaU1[0] + GammaU2[0] )/2
     ITaylor tempSolver( vectorField, order );
     IPoincareMap tempPM( tempSolver, tempSection );
     interval returnTime;
-    C0HOTripletonSet C0TempCenterSet( section1CenterVector );
+    COHOTripletonSet C0TempCenterSet( section1CenterVector );
 
     midCenterVector = tempPM( C0TempCenterSet, returnTime );
     midSection.setOrigin( midVector(midCenterVector) );
@@ -403,12 +403,12 @@ public:
           for( int k=3; k < dim; k++ )
             Set_ij[k] = params[k-3];      // we embed parameters  DEPRECATED
 */
-        C0HOTripletonSet *setAff;
+        COHOTripletonSet *setAff;
 
         if( !dir )
-          setAff = new C0HOTripletonSet( section1CenterVector, P1, Set_ij ); // the set moved to default space, observe that parameters remain unchanged
+          setAff = new COHOTripletonSet( section1CenterVector, P1, Set_ij ); // the set moved to default space, observe that parameters remain unchanged
         else
-          setAff = new C0HOTripletonSet( section2CenterVector, P2, Set_ij );
+          setAff = new COHOTripletonSet( section2CenterVector, P2, Set_ij );
         
   
         interval returntime(0.);

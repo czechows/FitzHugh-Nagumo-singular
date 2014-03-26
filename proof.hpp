@@ -37,8 +37,8 @@ void FhnVerifyExistenceOfPeriodicOrbit( interval _theta, interval _eps, bool _ve
     if( !(GammaUL[0] > GammaDL[0] && GammaUR[0] > GammaDR[0] && GammaUR[2] > GammaUL[2] && GammaDR[2] > GammaDL[2] ) )
       throw "NEWTON CORRECTION METHOD FOR CORNER POINTS ERROR! \n";
         
-    interval ruDL(0.03);           // distances from appropriate sections in appropr. direction (stable for sections to integrate from, unstable for sections to integrate onto)
-    interval rsUL(0.048);         
+    interval ruDL(0.036);           // distances from appropriate sections in appropr. direction (stable for sections to integrate from, unstable for sections to integrate onto)
+    interval rsUL(0.051);         
 
     interval ruUR(0.039);
     interval rsDR(0.04);
@@ -65,8 +65,8 @@ void FhnVerifyExistenceOfPeriodicOrbit( interval _theta, interval _eps, bool _ve
     IVector setToIntegrateDL(2);
     IVector setToIntegrateUR(2);
 
-    setToIntegrateDL[0] = 1.4e-2*interval(-1,1);  // this is ys at downleft corner  
-    setToIntegrateDL[1] = 5.0e-3*interval(-1,1);  // this is v at downleft corner
+    setToIntegrateDL[0] = 1.5e-2*interval(-1.0,0.6);  // this is ys at downleft corner  
+    setToIntegrateDL[1] = 4.8e-3*interval(-1,0.8);  // this is v at downleft corner
 
     setToIntegrateUR[0] = 1.7e-2*interval(-1,1);  // this is ys at upright corner
     setToIntegrateUR[1] = 6.0e-3*interval(-1,1);  // this is v at upright corner
@@ -76,7 +76,7 @@ void FhnVerifyExistenceOfPeriodicOrbit( interval _theta, interval _eps, bool _ve
     IVector setToBackIntegrateUL(2);
     IVector setToBackIntegrateDR(2);
 
-    setToBackIntegrateUL[0] = 3.0e-3*interval(-1,1);     // this is v at upleft corner
+    setToBackIntegrateUL[0] = 3.2e-3*interval(-1,1);     // this is v at upleft corner
     setToBackIntegrateUL[1] = 1.0e-2*interval(-1,1);         // this is yu at upleft corner
 
     setToBackIntegrateDR[0] = 2.8e-3*interval(-1,1);     // this is v at downright corner 
@@ -87,7 +87,7 @@ void FhnVerifyExistenceOfPeriodicOrbit( interval _theta, interval _eps, bool _ve
     if( _verbose )
     {
       cout <<  (*leftMap).checkCovering( setToIntegrateDL, setToBackIntegrateUL ) << "! \n";
-      cout <<  (*rightMap).checkCovering( setToIntegrateUR, setToBackIntegrateDR ) << "! \n";
+ //     cout <<  (*rightMap).checkCovering( setToIntegrateUR, setToBackIntegrateDR ) << "! \n";
     }
 
     delete leftMap;
