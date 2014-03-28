@@ -82,7 +82,24 @@ IVector shrinkAndExpand(IVector &N, interval factor)  // shrinks a rectangle in 
     return result;
 }
 
+void orthogonalizeRelativeColumn( IMatrix& matrixToOrthogonalize, unsigned int columnNo )
+{
+  for( unsigned int i = 0; i <= matrixToOrthogonalize.numberOfColumns() - 1; i++ ) 
+  { 
+    IVector vectorInvariant( matrixToOrthogonalize.column( columnNo ) );
+    if( i != columnNo )
+    {
+      IVector vectorToOrthogonalize( matrixToOrthogonalize.column(i) );
+      vectorToOrthogonalize = leftVector( midVector( vectorToOrthogonalize ) );
+      IVector projection = ( scalarProduct( vectorToOrthogonalize, vectorInvariant )/scalarProduct( vectorInvariant, vectorInvariant ) ) * vectorInvariant;
 
+      for( unsigned int j = 1; j <= matrixToOrthogonalize.numberOfRows(); j++ )
+      {
+        matrixToOrthogonalize(j,i+1) = vectorToOrthogonalize(j) - projection(j);
+      }
+    }
+  }
+}
 
 
 /* ------------------------------------------------------------------------------------ */
@@ -282,7 +299,8 @@ public:
 
     midCenterVector = tempPM( C0TempCenterSet, returnTime );
     midSection.setOrigin( midVector(midCenterVector) );
-    midSection.setNormalVector( midVector(vectorField( midCenterVector )) );
+    IVector normalVector( leftVector( midVector(vectorField( midCenterVector )) ) );
+    midSection.setNormalVector( normalVector );
 
     interval returnTime2;                                       // some objects here (solver, returntime) could have been reused but for safety we create new ones
     IMatrix monodromyMatrix( dim, dim );
@@ -295,11 +313,12 @@ public:
     midP = ( tempPM2.computeDP( tempVect, monodromyMatrix, returnTime2 ) )*P1;        // new coordinates are variational equations eval. at identity matrix times original matrix P1
                                                                                      // we cannot eval variational equations at P1 because CAPD doesn't support that yet 
                                                                                      // variational equation is linear though so that is ok
- 
+
     for( int i = 1; i <= dim; i++ )
-      midP(i,2) = midVector( vectorField( midCenterVector ) )[i-1];  // we insert the section normal vector as the second column of the coordinate change matrix
-                                                                     // as this was the unstable row of P1 in direction of which we integrated
-                                                                     // so before the insertion this column was ~0. This should make the matrix nonsingular.
+      midP(i,2) = normalVector[i-1];      // we insert the section normal vector as the second column of the coordinate change matrix
+                                          // as this was the unstable row of P1 in direction of which we integrated
+                                          // so before the insertion this column was ~0. This should make the matrix nonsingular.
+    orthogonalizeRelativeColumn(midP,1);
   }
   
   midPoincareMap( IVector _params, IMap _vectorField, IMap _vectorFieldRev, const IMatrix& _P1, const IMatrix& _P2, const IVector& _GammaU1, const IVector& _GammaU2, 
@@ -319,7 +338,8 @@ public:
 
     midCenterVector = tempPM( C0TempCenterSet, returnTime );
     midSection.setOrigin( midVector(midCenterVector) );
-    midSection.setNormalVector( midVector( vectorField( midCenterVector ) ) );
+    IVector normalVector( leftVector( midVector(vectorField( midCenterVector )) ) );
+    midSection.setNormalVector( normalVector );
 
     interval returnTime2;
     IMatrix monodromyMatrix( dim, dim );
@@ -342,8 +362,9 @@ public:
         }
         midP(i,i) = interval(1.);
       }
-      midP(i,2) = midVector( vectorField( midCenterVector ) )[i-1];
+      midP(i,2) = normalVector[i-1];
     }
+    orthogonalizeRelativeColumn(midP,1);
     
   }
 
@@ -416,7 +437,6 @@ public:
                                                                                             // in other words midP^-1( PM(setAff) - midCenterVector ) is computed 
                                                                                             // WARNING! THIS ZEROES PARAMETERS SO AS SUCH RESULT SHOULD NOT BE USED,
                                                                                             // ONLY FIRST 3 COORDINATES OF IT (RETURNED BY THIS FUNCTION) CAN BE USED
-        
 
         delete setAff;
  
