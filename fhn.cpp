@@ -40,7 +40,7 @@ int main(){
   cout.precision(9);
 
   interval theta = interval(61.)/100.; // theta = 0.53 also works
-  interval eps = interval(0.,6.)/1e5; //interval(0.,1.)/2e6;
+  interval eps = interval(0.,1.)/1e4; //interval(0.,1.)/2e6;
   bool verbose = 1; 
   bool with_params = 0;
   

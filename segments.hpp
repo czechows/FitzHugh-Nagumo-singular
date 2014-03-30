@@ -313,7 +313,7 @@ public:
 
       P_i1 = coordChange( vectorField, Gamma_i1 ); // we rotate the subsegments
 
-      Face_i0_adj = shrinkAndExpand( Face_i0, 1.1 ); // we shrink and expand the face by a fixed constant to get covering between subsegment faces
+      Face_i0_adj = shrinkAndExpand( Face_i0, 1.05 ); // we shrink and expand the face by a fixed constant to get covering between subsegment faces
 
       if( !isCovering( Face_i0, inverseMatrix(P_i1)*P_i0, Face_i0_adj ) )            // checking whether Face_i0 covers Face_i0_adj by matrix P_i1^(-1)*P_i0 (so changing coordinates
                                                                                      // from P_i0 to P_i1)
@@ -342,6 +342,8 @@ public:
       NormalSRxVectorFieldHull = intervalHull( NormalSRxVectorFieldHull, Segment_i.entranceVerification()[1] );
       NormalULxVectorFieldHull = intervalHull( NormalULxVectorFieldHull, Segment_i.exitVerification()[0] );
       NormalURxVectorFieldHull = intervalHull( NormalURxVectorFieldHull, Segment_i.exitVerification()[1] );
+      if( vectalg::containsZero( IVector( {intervalHull( NormalSLxVectorFieldHull, NormalSRxVectorFieldHull )} ) ) )
+        cout << intervalHull( NormalSLxVectorFieldHull, NormalSRxVectorFieldHull ) << " contains zero at iteration : " << i << "\n" ;
      }
 
      Gamma_i0 = Gamma_i1;  // we move to the next subsegment

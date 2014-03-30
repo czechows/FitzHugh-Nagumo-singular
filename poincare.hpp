@@ -291,7 +291,7 @@ public:
     midSection( midCenterVector, midCenterVector ),
     vectorFieldRev( _vectorFieldRev )
   {
-    ICoordinateSection tempSection( dim, 0, ( (93./100.)*_GammaU1[0] + (7./100.)*_GammaU2[0] ) ); // an auxiliary section u = ( GammaU1[0] + GammaU2[0] )/2
+    ICoordinateSection tempSection( dim, 0, ( (91./100.)*_GammaU1[0] + (9./100.)*_GammaU2[0] ) ); // an auxiliary section u = ( GammaU1[0] + GammaU2[0] )/2
     ITaylor tempSolver( vectorField, order );
     IPoincareMap tempPM( tempSolver, tempSection );
     interval returnTime;

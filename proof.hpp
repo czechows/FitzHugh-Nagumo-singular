@@ -11,7 +11,7 @@
 
 
 void FhnVerifyExistenceOfPeriodicOrbit( interval _theta, interval _eps, bool _verbose = 0, bool withParams = 0, int _pMapDivCount = 40, 
-     int _longSubsegmentCount = 100, int _longSegmentDivCount = 120, int _cornerSegmentDivCount = 500 ) 
+     int _longSubsegmentCount = 80, int _longSegmentDivCount = 120, int _cornerSegmentDivCount = 500 ) 
   // verbose on displays all the interval enclosures for Poincare maps / products of vector fields with normals; other parameters control respectively: 
   // number of subdivisions of sets to integrate (in each dimension), number of subsegments along slow manifolds, number of subdivisions of regular/corner segments
   // for evaluation of the scalar product of vector field with outward pointing normals
@@ -65,10 +65,10 @@ void FhnVerifyExistenceOfPeriodicOrbit( interval _theta, interval _eps, bool _ve
     IVector setToIntegrateDL(2);
     IVector setToIntegrateUR(2);
 
-    setToIntegrateDL[0] = 1.4e-2*interval(-1,1);  // this is ys at downleft corner  
-    setToIntegrateDL[1] = 5.0e-3*interval(-1,1);  // this is v at downleft corner
+    setToIntegrateDL[0] = 1.2e-2*interval(-1,1);  // this is ys at downleft corner  
+    setToIntegrateDL[1] = 4.5e-3*interval(-1,1);  // this is v at downleft corner
 
-    setToIntegrateUR[0] = 1.7e-2*interval(-1,1);  // this is ys at upright corner
+    setToIntegrateUR[0] = 1.9e-2*interval(-1,1);  // this is ys at upright corner
     setToIntegrateUR[1] = 6.0e-3*interval(-1,1);  // this is v at upright corner
 
     // sets to integrate backwards - only with the parameter _midsection = 1 on
