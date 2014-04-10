@@ -18,7 +18,7 @@ IMatrix coordChange( IMap vectorField, const IVector& Gamma ) // matrix of coord
                                                               // from straightened stable/unstable (i.e. (1,0,0), (0,1,0)) coordinates to real ones; third "neutral" variable unchanged
                                                               // doesn't need to be rigorous (and isn't) 
 {
-  int vdim( Gamma.dimension() );
+  int vdim( 3 );   // should be used only in dimension 3!
   DMatrix JacobianD( vdim, vdim );
  
   for(int i=0; i<vdim; i++)              // we have to convert to doubles to use computeEigenvaluesAndEigenvectors function
@@ -28,20 +28,45 @@ IMatrix coordChange( IMap vectorField, const IVector& Gamma ) // matrix of coord
   }
 
   // temporary vectors and matrices to hold eigenvalues & imaginary parts of eigenvectors
-  DVector tempvect( vdim );   
+  DVector tempvectRe( vdim );   
+  DVector tempvectIm( vdim );
+
   DMatrix tempmatrix( vdim, vdim );
   
   DMatrix P( vdim, vdim );
+  DMatrix P_result( vdim, vdim );
 
-  computeEigenvaluesAndEigenvectors(JacobianD, tempvect, tempvect, P, tempmatrix);
+  computeEigenvaluesAndEigenvectors(JacobianD, tempvectRe, tempvectIm, P, tempmatrix);
+
+  int i_min(42);
+  int i_med(42);
+  int i_max(42); 
+
+  for( int i = 1; i <= vdim; i++ )
+  {
+    if( tempvectRe(i) == min( tempvectRe(1), min(tempvectRe(2), tempvectRe(3)) ) )
+      i_min = i;
+    else if( tempvectRe(i) == max( tempvectRe(1), max(tempvectRe(2), tempvectRe(3)) ) )
+      i_max = i;
+    else 
+      i_med = i;
+  }
+
+
+  for( int i = 1; i <=vdim; i++ )
+  { 
+    P_result(i,1) = P( i, i_min );
+    P_result(i,2) = P( i, i_max );
+    P_result(i,3) = P( i, i_med );
+  }
 
   // next two lines depend on dimension and mean that we are only changing coordinates for the fast variables (2x2 matrix), slow remain unchanged (are treated as a parameter)
   // here we explicitly assume vdim = 3 and last variable is slow!
-  P[0][2] = P[1][2] = P[2][0] = P[2][1] = 0.;
-  P[2][2] = -1.;      // -1 because we add a minus in return
+  P_result[0][2] = P_result[1][2] = P_result[2][0] = P_result[2][1] = 0.;
+  P_result[2][2] = -1.;      // -1 because we add a minus in return
 
-  return -IMatrix(P); // minus eigenvectors are also eigenvectors and such transformed matrix suits better our computations - one could also put minuses
-                      // into displacements of sections and sets to integrate from slow manifolds
+  return -IMatrix(P_result); // minus eigenvectors are also eigenvectors and such transformed matrix suits better our computations - one could also put minuses
+                            // into displacements of sections and sets to integrate from slow manifolds
 };
 
 
