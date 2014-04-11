@@ -37,19 +37,36 @@ IMap Fhn_vf_withParams_rev("var:u,w,v,theta,eps;fun:-w,(-2/10)*(theta*w+u*(u-1)*
 
 int main(){
 
-  cout.precision(9);
+  cout.precision(15);
 
-  interval theta = interval(61.)/100.; // theta = 0.53 also works
-  interval eps = interval(0.,1.)/1e4; //interval(0.,1.)/2e6;
+  interval theta = interval(61.)/100.; // theta = 0.53 also works (?)
+  interval eps = interval(0.,1.022)/1e4 ;  
   bool verbose = 1; 
   bool with_params = 0;
   
   FhnVerifyExistenceOfPeriodicOrbit( theta, eps, verbose, with_params );
- // FhnVerifyExistenceOfPeriodicOrbit( theta, eps, verbose );
 
-//  theta = interval(63.)/100;
- 
-//  FhnVerifyExistenceOfPeriodicOrbit( theta, eps, verbose );
+/*
+  theta = interval(53.)/100;
+  eps = interval(0.,1.)/2e4;
+
+  FhnVerifyExistenceOfPeriodicOrbit( theta, eps, verbose, with_params );
+*/
+
+/*
+  theta = interval(47.)/100;
+  eps = interval(0.,1.)/2e4;
+
+  FhnVerifyExistenceOfPeriodicOrbit( theta, eps, verbose, with_params );
+*/
+
+/*
+  theta = interval(550., 554.)/1000;
+  eps = interval(0.,1.)/2e4;
+
+  FhnVerifyExistenceOfPeriodicOrbit( theta, eps, verbose, with_params );
+*/
+
 
   return 0;
 } 

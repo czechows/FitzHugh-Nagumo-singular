@@ -418,13 +418,10 @@ public:
           Set_ij[2] = ( theSet[0].rightBound() - theSet[0].leftBound() )*ti + theSet[0].leftBound();    // subdivision of v coordinate
           Set_ij[1] = ( theSet[1].rightBound() - theSet[1].leftBound() )*tj + theSet[1].leftBound();    // subdivision of yu coordinate
         }
-        
+ 
 
- /*       if( dim > 3 )  // checks whether we have parameters
-          for( int k=3; k < dim; k++ )
-            Set_ij[k] = params[k-3];      // we embed parameters  DEPRECATED
-*/
         C0HOTripletonSet *setAff;
+
 
         if( !dir )
           setAff = new C0HOTripletonSet( section1CenterVector, P1, Set_ij ); // the set moved to default space, observe that parameters remain unchanged
@@ -432,11 +429,13 @@ public:
           setAff = new C0HOTripletonSet( section2CenterVector, P2, Set_ij );
         
   
+
         interval returntime(0.);
         IVector result = (*midPM)( *setAff, midCenterVector, inverseMatrix(midP), returntime );     // result is moved back to local coordinates, yu should be close to 0 
                                                                                             // in other words midP^-1( PM(setAff) - midCenterVector ) is computed 
                                                                                             // WARNING! THIS ZEROES PARAMETERS SO AS SUCH RESULT SHOULD NOT BE USED,
                                                                                             // ONLY FIRST 3 COORDINATES OF IT (RETURNED BY THIS FUNCTION) CAN BE USED
+
 
         delete setAff;
  

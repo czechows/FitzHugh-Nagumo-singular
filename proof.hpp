@@ -208,6 +208,7 @@ void FhnVerifyExistenceOfPeriodicOrbit( interval _theta, interval _eps, bool _ve
       cout << "\n --- \n";   
     };
 
+    // ISOLATION CAN BE ALSO CHECKED NOW FOR EACH SUBSEGMENT IN SEGMENTS.HPP TO THROW EXCEPTION FASTER, SEE COMMENTED LINES IN SEGMENTS.HPP
     if( !( UpSegment_entranceAndExitVerification[0] < 0. && UpSegment_entranceAndExitVerification[1] < 0. 
           && UpSegment_entranceAndExitVerification[2] > 0. && UpSegment_entranceAndExitVerification[3] > 0. ) )
       throw "ISOLATION ERROR FOR ONE OF THE UPPER REGULAR SEGMENTS! \n";

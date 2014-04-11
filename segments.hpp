@@ -20,11 +20,16 @@ IMatrix coordChange( IMap vectorField, const IVector& Gamma ) // matrix of coord
 {
   int vdim( 3 );   // should be used only in dimension 3!
   DMatrix JacobianD( vdim, vdim );
+
+  // a patch to set eps to 0 for the vector field for computing coordinates around slow manifold
+  IMap vectorFieldZeroEps( vectorField );          
+  vectorFieldZeroEps.setParameter("eps", interval(0.) );
+  // WARNING: specific to the (type of) the vector field. Takes care of the problem that proof does not go for subintervals of parameter epsilon away from 0.
  
   for(int i=0; i<vdim; i++)              // we have to convert to doubles to use computeEigenvaluesAndEigenvectors function
   {
     for(int j=0; j<vdim; j++)
-      JacobianD[i][j] = ( ( vectorField[Gamma] )[i][j] ).leftBound();
+      JacobianD[i][j] = ( ( vectorFieldZeroEps[Gamma] )[i][j] ).leftBound();
   }
 
   // temporary vectors and matrices to hold eigenvalues & imaginary parts of eigenvectors
@@ -38,11 +43,11 @@ IMatrix coordChange( IMap vectorField, const IVector& Gamma ) // matrix of coord
 
   computeEigenvaluesAndEigenvectors(JacobianD, tempvectRe, tempvectIm, P, tempmatrix);
 
-  int i_min(42);
+  int i_min(42);  // i's initialized with any value
   int i_med(42);
   int i_max(42); 
 
-  for( int i = 1; i <= vdim; i++ )
+  for( int i = 1; i <= vdim; i++ ) // sorting so we are sure we have stable coordinate first unstable second neutral third. ONLY FOR 3D vector fields!
   {
     if( tempvectRe(i) == min( tempvectRe(1), min(tempvectRe(2), tempvectRe(3)) ) )
       i_min = i;
@@ -59,6 +64,9 @@ IMatrix coordChange( IMap vectorField, const IVector& Gamma ) // matrix of coord
     P_result(i,2) = P( i, i_max );
     P_result(i,3) = P( i, i_med );
   }
+
+
+
 
   // next two lines depend on dimension and mean that we are only changing coordinates for the fast variables (2x2 matrix), slow remain unchanged (are treated as a parameter)
   // here we explicitly assume vdim = 3 and last variable is slow!
@@ -367,9 +375,15 @@ public:
       NormalSRxVectorFieldHull = intervalHull( NormalSRxVectorFieldHull, Segment_i.entranceVerification()[1] );
       NormalULxVectorFieldHull = intervalHull( NormalULxVectorFieldHull, Segment_i.exitVerification()[0] );
       NormalURxVectorFieldHull = intervalHull( NormalURxVectorFieldHull, Segment_i.exitVerification()[1] );
-      if( vectalg::containsZero( IVector( {intervalHull( NormalSLxVectorFieldHull, NormalSRxVectorFieldHull )} ) ) )
-        cout << intervalHull( NormalSLxVectorFieldHull, NormalSRxVectorFieldHull ) << " contains zero at iteration : " << i << "\n" ;
      }
+
+     // UNCOMMENT FOR THROWING ISOLATION EXCEPTIONS ON THE RUN TO BREAK FROM PROGRAM FASTER - NOT NECESSARY FOR THE PROOF BUT SAVES TIME
+     if( vectalg::containsZero( IVector( {intervalHull( NormalSLxVectorFieldHull, NormalSRxVectorFieldHull )} ) ) )
+       throw "ISOLATION ERROR FOR ONE OF THE REGULAR ISOLATING SEGMENTS! \n" ; 
+
+     if( vectalg::containsZero( IVector( {intervalHull( NormalULxVectorFieldHull, NormalURxVectorFieldHull )} ) ) )
+       throw "ISOLATION ERROR FOR ONE OF THE REGULAR ISOLATING SEGMENTS! \n" ; 
+     
 
      Gamma_i0 = Gamma_i1;  // we move to the next subsegment
      Face_i0 = Face_i1;

@@ -100,8 +100,17 @@ public:
       throw "EIGENVALUES OF FAST SUBSYSTEM AT STATIONARY POINTS NOT REAL! \n";
     if(EigenvalD_im[0] != 0.)
       throw "EIGENVALUES OF FAST SUBSYSTEM AT STATIONARY POINTS NOT REAL! \n";
-    
-    if(dir == 1) // here one has to play manually with pluses and minuses so we are on the right side of stable/unstable manifolds and we catch the right eigenvectors
+
+    // we want to have first eigenvector stable, second unstable. We do not swap eigenvalues since we don't use them later. Slows down everything by ~30s
+ /*   if( EigenvalU_real[0] > EigenvalU_real[1] )
+      matrixAlgorithms::columnExchange( EigenvectU_real, 1, 2 );
+
+    if( EigenvalD_real[0] > EigenvalD_real[1] )
+      matrixAlgorithms::columnExchange( EigenvectD_real, 1, 2 );
+*/
+
+    // here one has to play manually with pluses and minuses so we are on the right side of stable/unstable manifolds and we catch the right eigenvectors
+    if(dir == 1) 
         return pm(guessEqU + EigenvectU_real.column(1)*DISP, return_time)[1] - pmRev(guessEqD - EigenvectD_real.column(0)*DISP, return_time)[1]; 
     else
         return pmRev(guessEqU + EigenvectU_real.column(0)*DISP, return_time)[1] - pm(guessEqD - EigenvectD_real.column(1)*DISP, return_time)[1];   
