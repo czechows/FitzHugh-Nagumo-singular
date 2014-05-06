@@ -6,8 +6,6 @@
  * ----------------------------------------------------------------------------------------*/
 
 
-
-
 /* ----------------------------------------------------------------------------------------- */
 /* ---------------------------- COVERING RELATIONS ----------------------------------------- */
 /* ----------------------------------------------------------------------------------------- */
@@ -242,7 +240,7 @@ public:
           for( int k=3; k < dim; k++ )
             Set_ij[k] = 0.; // params[k-3];      // we embed parameters  */ // this part of code is probably deprecated since we embedded the parameters in the constructor
 
-        C0Rect2Set setAff( section1CenterVector, P1, Set_ij ); // the set moved to default space, observe that parameters remain unchanged
+        C0HOTripletonSet setAff( section1CenterVector, P1, Set_ij ); // the set moved to default space, observe that parameters remain unchanged
 
         interval returntime(0.);
         IVector result = pm( setAff, GammaU2, inverseMatrix(P2), returntime ); // result is moved back to local coordinates, ys should be close to 0 
@@ -295,7 +293,7 @@ public:
     ITaylor tempSolver( vectorField, order );
     IPoincareMap tempPM( tempSolver, tempSection );
     interval returnTime;
-    C0Rect2Set C0TempCenterSet( section1CenterVector );
+    C0HOTripletonSet C0TempCenterSet( section1CenterVector );
 
     midCenterVector = tempPM( C0TempCenterSet, returnTime );
     midSection.setOrigin( midVector(midCenterVector) );
@@ -334,7 +332,7 @@ public:
     ITaylor tempSolver( vectorField, order );
     IPoincareMap tempPM( tempSolver, tempSection );
     interval returnTime;
-    C0Rect2Set C0TempCenterSet( section1CenterVector );
+    C0HOTripletonSet C0TempCenterSet( section1CenterVector );
 
     midCenterVector = tempPM( C0TempCenterSet, returnTime );
     midSection.setOrigin( midVector(midCenterVector) );
@@ -420,13 +418,13 @@ public:
         }
  
 
-        C0Rect2Set *setAff;
+        C0HOTripletonSet *setAff;
 
 
         if( !dir )
-          setAff = new C0Rect2Set( section1CenterVector, P1, Set_ij ); // the set moved to default space, observe that parameters remain unchanged
+          setAff = new C0HOTripletonSet( section1CenterVector, P1, Set_ij ); // the set moved to default space, observe that parameters remain unchanged
         else
-          setAff = new C0Rect2Set( section2CenterVector, P2, Set_ij );
+          setAff = new C0HOTripletonSet( section2CenterVector, P2, Set_ij );
         
   
 
