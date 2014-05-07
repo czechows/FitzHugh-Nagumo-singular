@@ -44,7 +44,7 @@ IVector rightS(const IVector &N)
   return _rightS;
 }
 
-bool isCovering( IVector& setCovering, const IMatrix& setCoveringCoord, IVector& setToCover ) 
+bool isCovering( const IVector& setCovering, const IMatrix& setCoveringCoord, const IVector& setToCover ) 
                                                       // verifies covering between image of setCovering by a matrix setCoveringCoord over setToCover 
                                                       // first variable stable second unstable
 {
@@ -72,7 +72,7 @@ bool isBackwardCovering( IVector& setCovering, const IMatrix& setCoveringCoord, 
 };
 */
 
-IVector shrinkAndExpand(IVector &N, interval factor)  // shrinks a rectangle in unstable direction and expands it in stable to get a covering (for example by original rectangle)
+IVector shrinkAndExpand(const IVector &N, interval factor)  // shrinks a rectangle in unstable direction and expands it in stable to get a covering (for example by original rectangle)
 {
     IVector result(N);
     result[0] = N[0]*factor;
