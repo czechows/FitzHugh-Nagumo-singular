@@ -290,32 +290,57 @@ public:
     vectorFieldRev( _vectorFieldRev )
   {
     ICoordinateSection tempSection( dim, 0, ( (91./100.)*_GammaU1[0] + (9./100.)*_GammaU2[0] ) ); // an auxiliary section u = ( GammaU1[0] + GammaU2[0] )/2
+
     ITaylor tempSolver( vectorField, order );
     IPoincareMap tempPM( tempSolver, tempSection );
+
     interval returnTime;
     C0HOTripletonSet C0TempCenterSet( section1CenterVector );
 
     midCenterVector = tempPM( C0TempCenterSet, returnTime );
     midSection.setOrigin( midVector(midCenterVector) );
+
     IVector normalVector( leftVector( midVector(vectorField( midCenterVector )) ) );
     midSection.setNormalVector( normalVector );
 
-    interval returnTime2;                                       // some objects here (solver, returntime) could have been reused but for safety we create new ones
+    // some objects here (solver, returntime) could have been reused but for safety we create new ones
+    interval returnTime2;    
+    interval returnTime2Rev;
+
     IMatrix monodromyMatrix( dim, dim );
+    IMatrix monodromyMatrixRev( dim, dim );
+
     ITaylor tempSolver2( vectorField, order );
+    ITaylor tempSolver2Rev( vectorFieldRev, order );
+
     C1Rect2Set C1TempCenterSet( section1CenterVector );
+    C1Rect2Set C1TempCenterSetRev( section2CenterVector );
 
     IPoincareMap tempPM2( tempSolver2, midSection );
-    IVector tempVect = tempPM2( C1TempCenterSet, monodromyMatrix, returnTime2 );
+    IPoincareMap tempPM2Rev( tempSolver2Rev, midSection );
 
-    midP = ( tempPM2.computeDP( tempVect, monodromyMatrix, returnTime2 ) )*P1;        // new coordinates are variational equations eval. at identity matrix times original matrix P1
+    IVector tempVect = tempPM2( C1TempCenterSet, monodromyMatrix, returnTime2 );
+    IVector tempVectRev = tempPM2Rev( C1TempCenterSetRev, monodromyMatrixRev, returnTime2Rev );
+
+    IVector stableDir = ( tempPM2Rev.computeDP( tempVectRev, monodromyMatrixRev, returnTime2Rev ) )*P2.column(2);
+    IVector unstableDir = ( tempPM2.computeDP( tempVect, monodromyMatrix, returnTime2 ) )*P1.column(2);
+                                                                                     // new coordinates are variational equations eval. at identity matrix times original matrix P1
                                                                                      // we cannot eval variational equations at P1 because CAPD doesn't support that yet 
                                                                                      // variational equation is linear though so that is ok
+    IEuclNorm vectorNorm;
+
+    stableDir = stableDir / vectorNorm( stableDir );
+    unstableDir = unstableDir / vectorNorm( unstableDir );
 
     for( int i = 1; i <= dim; i++ )
+    {
       midP(i,2) = normalVector[i-1];      // we insert the section normal vector as the second column of the coordinate change matrix
                                           // as this was the unstable row of P1 in direction of which we integrated
                                           // so before the insertion this column was ~0. This should make the matrix nonsingular.
+      midP(i,1) = stableDir(i);
+      midP(i,3) = unstableDir(i);
+    }
+
     orthogonalizeRelativeColumn(midP,1);
   }
   
@@ -329,25 +354,45 @@ public:
     vectorFieldRev( _vectorFieldRev )
   {
     ICoordinateSection tempSection( dim, 0, ( (945./1000.)*_GammaU1[0] + (55./1000.)*_GammaU2[0] ) ); // an auxiliary section u = ( GammaU1[0] + GammaU2[0] )/2
+
     ITaylor tempSolver( vectorField, order );
     IPoincareMap tempPM( tempSolver, tempSection );
+
     interval returnTime;
     C0HOTripletonSet C0TempCenterSet( section1CenterVector );
 
     midCenterVector = tempPM( C0TempCenterSet, returnTime );
     midSection.setOrigin( midVector(midCenterVector) );
+
     IVector normalVector( leftVector( midVector(vectorField( midCenterVector )) ) );
     midSection.setNormalVector( normalVector );
 
-    interval returnTime2;
+    // some objects here (solver, returntime) could have been reused but for safety we create new ones
+    interval returnTime2;    
+    interval returnTime2Rev;
+
     IMatrix monodromyMatrix( dim, dim );
-    ITaylor tempSolver2( vectorField, order );                  
+    IMatrix monodromyMatrixRev( dim, dim );
+
+    ITaylor tempSolver2( vectorField, order );
+    ITaylor tempSolver2Rev( vectorFieldRev, order );
+
     C1Rect2Set C1TempCenterSet( section1CenterVector );
+    C1Rect2Set C1TempCenterSetRev( section2CenterVector );
 
     IPoincareMap tempPM2( tempSolver2, midSection );
-    IVector tempVect = tempPM2( C1TempCenterSet, monodromyMatrix, returnTime2 );
+    IPoincareMap tempPM2Rev( tempSolver2Rev, midSection );
 
-    midP = ( tempPM2.computeDP( tempVect, monodromyMatrix, returnTime2 ) )*P1;  
+    IVector tempVect = tempPM2( C1TempCenterSet, monodromyMatrix, returnTime2 );
+    IVector tempVectRev = tempPM2Rev( C1TempCenterSetRev, monodromyMatrixRev, returnTime2Rev );
+
+    IVector stableDir = ( tempPM2Rev.computeDP( tempVectRev, monodromyMatrixRev, returnTime2Rev ) )*P2.column(2);
+    IVector unstableDir = ( tempPM2.computeDP( tempVect, monodromyMatrix, returnTime2 ) )*P1.column(2);
+
+    IEuclNorm vectorNorm;
+
+    stableDir = stableDir / vectorNorm( stableDir );
+    unstableDir = unstableDir / vectorNorm( unstableDir );
 
     for( int i = 1; i <= dim; i++ )
     {
@@ -361,9 +406,10 @@ public:
         midP(i,i) = interval(1.);
       }
       midP(i,2) = normalVector[i-1];
+      midP(i,1) = stableDir(i);
+      midP(i,3) = unstableDir(i);
     }
     orthogonalizeRelativeColumn(midP,1);
-    
   }
 
 
