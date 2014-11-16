@@ -83,7 +83,7 @@ IMatrix coordChange( IMap vectorField, const IVector& Gamma ) // matrix of coord
 /* ---------------------------- ISOLATING SEGMENTS ----------------------------------------- */
 /* ----------------------------------------------------------------------------------------- */
 
-class FhnIsolatingSegment                 // class for verification of existence of isolating segments
+class FhnIsolatingSegment                 // class for verification of isolation in segments
 {
 public:
   IMap vectorField;
@@ -120,9 +120,9 @@ public:
 
   IVector entranceVerification() // all normals are outward pointing
   {
-    IVector normalSL( -1., 0., -( (InvP*GammaRight)[0] + rightFace[0].leftBound() - ( (InvP*GammaLeft)[0] + leftFace[0].leftBound() ) )/( GammaRight[2] - GammaLeft[2] ) );
+    IVector normalSL( -1., 0., ( (InvP*GammaRight)[0] + rightFace[0].leftBound() - ( (InvP*GammaLeft)[0] + leftFace[0].leftBound() ) )/( GammaRight[2] - GammaLeft[2] ) );
     IVector normalSR( 1., 0., -( (InvP*GammaRight)[0] + rightFace[0].rightBound() - ( (InvP*GammaLeft)[0] + leftFace[0].rightBound() ) )/( GammaRight[2] - GammaLeft[2] ) );   
-        // outward normal to (t(b-a)+a, s, t(v2-v1)+v1) is (-1,0,-(b-a)/(v2-v1)), a < 0 (left)
+        // ex. outward normal to (t(b-a)+a, s, t(v2-v1)+v1) is (1,0,-(b-a)/(v2-v1)) (for normalSR, with - for normalSL)
         // here a = (P-1(gammaleft))[0] + leftface[0].leftbound, b = (P-1(gammaright))[0] + rightface[0].leftbound so later we need to transform whole segment by P
         // to obtain the normal stable "left" vector
         // for normal stable "right" vector we do the same 
@@ -197,9 +197,9 @@ public:
 
   IVector exitVerification() // all normals are outward pointing
   {    
-    IVector normalUL( 0., -1., -( (InvP*GammaRight)[1] + rightFace[1].leftBound() - ( (InvP*GammaLeft)[1] + leftFace[1].leftBound() ) )/( GammaRight[2] - GammaLeft[2] ) );
+    IVector normalUL( 0., -1., ( (InvP*GammaRight)[1] + rightFace[1].leftBound() - ( (InvP*GammaLeft)[1] + leftFace[1].leftBound() ) )/( GammaRight[2] - GammaLeft[2] ) );
     IVector normalUR( 0., 1., -( (InvP*GammaRight)[1] + rightFace[1].rightBound() - ( (InvP*GammaLeft)[1] + leftFace[1].rightBound() ) )/( GammaRight[2] - GammaLeft[2] ) );
-        // again, outward normal to (s, t(b-a)+a, t(v2-v1)+v1) is (0, -1,-(b-a)/(v2-v1)) for a < 0
+        // again, outward normal to (s, t(b-a)+a, t(v2-v1)+v1) is (0, 1,-(b-a)/(v2-v1)) for UR, minus that for UL
         // here a = (P-1(gammaleft))[1] + leftface[1].leftbound, b = (P-1(gammaright))[1] + rightface[1].leftbound so later we need to transform whole segment by P
         // same for unstable right normal ( a > 0 )
 
@@ -218,16 +218,16 @@ public:
       // unstable left evaluation
           
       IVector faceUL_i(3);
-      faceUL_i[0] = interval( ( ( rightFace[0].leftBound() - leftFace[0].leftBound() )*ti + leftFace[0].leftBound() ).leftBound(), // remove some leftBounds?
-                                       ( ( rightFace[0].rightBound() - leftFace[0].rightBound() )*ti + leftFace[0].rightBound() ).rightBound() ); // remove some rightBounds?
+      faceUL_i[0] = interval( ( ( rightFace[0].leftBound() - leftFace[0].leftBound() )*ti + leftFace[0].leftBound() ).leftBound(), 
+                                       ( ( rightFace[0].rightBound() - leftFace[0].rightBound() )*ti + leftFace[0].rightBound() ).rightBound() ); 
       faceUL_i[1] = ( rightFace[1].leftBound() - leftFace[1].leftBound() )*ti + leftFace[1].leftBound();
       faceUL_i[2] = 0.;
  
       // unstable right evaluation
 
       IVector faceUR_i(3);
-      faceUR_i[0] = interval( ( ( rightFace[0].leftBound() - leftFace[0].leftBound() )*ti + leftFace[0].leftBound() ).leftBound(), // remove some leftBounds?
-                                       ( ( rightFace[0].rightBound() - leftFace[0].rightBound() )*ti + leftFace[0].rightBound() ).rightBound() ); // remove some rightBounds?
+      faceUR_i[0] = interval( ( ( rightFace[0].leftBound() - leftFace[0].leftBound() )*ti + leftFace[0].leftBound() ).leftBound(), 
+                                       ( ( rightFace[0].rightBound() - leftFace[0].rightBound() )*ti + leftFace[0].rightBound() ).rightBound() ); 
       faceUR_i[1] = ( rightFace[1].rightBound() - leftFace[1].rightBound() )*ti + leftFace[1].rightBound();
       faceUR_i[2] = 0.;
       
@@ -308,8 +308,6 @@ public:
   IVector entranceAndExitVerification(int N_Segments) // first two coordinates are hulls of normalSLxVectorField, normalSRxVectorField, then normalULxVectorField and normalURxVectorField
     // exit and entrance verification are done together here to speed up calculations, reduce amount of code and memory used, etc.
     // N_Segments is the number of subsegments of a long isolating segment; disc is then number of discretizations of each such subsegment
-    // we do not "rotate" subsegments, we also do not need to widen and shorten them to get coverings - we treat them as a part of one long
-    // partially smooth IS
   {
     IVector Gamma_i0( GammaLeft );
     IVector Gamma_i1(3);
@@ -338,10 +336,10 @@ public:
       Gamma_i1 = Eq_correct( Gamma_i1 ); // we correct linear approx. of a slow manifold point by Newtons method
 
       // we widen the faces by linearly extending/contracting width and length from leftFace to rightFace sizes
-      Face_i1[0] = interval( ( ( rightFace[0].leftBound() - leftFace[0].leftBound() )*ti1 + leftFace[0].leftBound() ).leftBound(), // remove some leftBounds?
-                                       ( ( rightFace[0].rightBound() - leftFace[0].rightBound() )*ti1 + leftFace[0].rightBound() ).rightBound() ); // remove some rightBounds?
-      Face_i1[1] = interval( ( ( rightFace[1].leftBound() - leftFace[1].leftBound() )*ti1 + leftFace[1].leftBound() ).leftBound(), // remove some leftBounds?
-                                       ( ( rightFace[1].rightBound() - leftFace[1].rightBound() )*ti1 + leftFace[1].rightBound() ).rightBound() ); // remove some rightBounds?      
+      Face_i1[0] = interval( ( ( rightFace[0].leftBound() - leftFace[0].leftBound() )*ti1 + leftFace[0].leftBound() ).leftBound(), 
+                                       ( ( rightFace[0].rightBound() - leftFace[0].rightBound() )*ti1 + leftFace[0].rightBound() ).rightBound() ); 
+      Face_i1[1] = interval( ( ( rightFace[1].leftBound() - leftFace[1].leftBound() )*ti1 + leftFace[1].leftBound() ).leftBound(), 
+                                       ( ( rightFace[1].rightBound() - leftFace[1].rightBound() )*ti1 + leftFace[1].rightBound() ).rightBound() );       
       Face_i1[2] = 0.;
 
       P_i1 = coordChange( vectorField, Gamma_i1 ); // we rotate the subsegments
@@ -378,13 +376,13 @@ public:
      }
 
      // UNCOMMENT FOR THROWING ISOLATION EXCEPTIONS ON THE RUN TO BREAK FROM PROGRAM FASTER - NOT NECESSARY FOR THE PROOF BUT SAVES TIME
-     if( vectalg::containsZero( IVector( {intervalHull( NormalSLxVectorFieldHull, NormalSRxVectorFieldHull )} ) ) )
+ /*    if( vectalg::containsZero( IVector( {intervalHull( NormalSLxVectorFieldHull, NormalSRxVectorFieldHull )} ) ) )
        throw "ISOLATION ERROR FOR ONE OF THE REGULAR ISOLATING SEGMENTS! \n" ; 
 
      if( vectalg::containsZero( IVector( {intervalHull( NormalULxVectorFieldHull, NormalURxVectorFieldHull )} ) ) )
        throw "ISOLATION ERROR FOR ONE OF THE REGULAR ISOLATING SEGMENTS! \n" ; 
      
-
+*/
      Gamma_i0 = Gamma_i1;  // we move to the next subsegment
      Face_i0 = Face_i1;
      P_i0 = P_i1;

@@ -34,19 +34,21 @@ void FhnVerifyExistenceOfPeriodicOrbit( interval _theta, interval _eps, bool _ve
 
     GammaQuad_correct( _theta, GammaUL, GammaDL, GammaUR, GammaDR );                              // we correct the initial guesses by nonrigorous Newtons methods (see numerics.hpp)
 
+ 
     if( !(GammaUL[0] > GammaDL[0] && GammaUR[0] > GammaDR[0] && GammaUR[2] > GammaUL[2] && GammaDR[2] > GammaDL[2] ) )
       throw "NEWTON CORRECTION METHOD FOR CORNER POINTS ERROR! \n";
         
-    interval ruDL(0.03);           // distances from appropriate sections in appropr. direction (stable for sections to integrate from, unstable for sections to integrate onto)
-    interval rsUL(0.048);         
+    interval ruDL(0.015);           // distances from appropriate sections in appropr. direction (stable for sections to integrate from, unstable for sections to integrate onto)
+    interval rsUL(0.015);         
 
-    interval ruUR(0.039);
-    interval rsDR(0.04);
+    interval ruUR(0.029);
+    interval rsDR(0.03);
 
     IMatrix PUL( coordChange( Fhn_vf, GammaUL ) ), 
             PUR( coordChange( Fhn_vf, GammaUR ) ), 
             PDL( coordChange( Fhn_vf, GammaDL ) ),  
             PDR( coordChange( Fhn_vf, GammaDR ) ); 
+    
 
     midPoincareMap *leftMap;
     midPoincareMap *rightMap;
@@ -66,29 +68,34 @@ void FhnVerifyExistenceOfPeriodicOrbit( interval _theta, interval _eps, bool _ve
     IVector setToIntegrateUR(2);
 
     setToIntegrateDL[0] = 1.2e-2*interval(-1,1);  // this is ys at downleft corner  
-    setToIntegrateDL[1] = 4.5e-3*interval(-1,1);  // this is v at downleft corner
+    setToIntegrateDL[1] = 5.0e-3*interval(-1,1);  // this is v at downleft corner
 
     setToIntegrateUR[0] = 1.9e-2*interval(-1,1);  // this is ys at upright corner
-    setToIntegrateUR[1] = 6.0e-3*interval(-1,1);  // this is v at upright corner
+    setToIntegrateUR[1] = 5.0e-3*interval(-1,1);  // this is v at upright corner
 
     // sets to integrate backwards - only with the parameter _midsection = 1 on
 
     IVector setToBackIntegrateUL(2);
     IVector setToBackIntegrateDR(2);
 
-    setToBackIntegrateUL[0] = 3.0e-3*interval(-1,1);     // this is v at upleft corner
+    setToBackIntegrateUL[0] = 5.0e-3*interval(-1,1);     // this is v at upleft corner
     setToBackIntegrateUL[1] = 1.0e-2*interval(-1,1);         // this is yu at upleft corner
 
-    setToBackIntegrateDR[0] = 2.8e-3*interval(-1,1);     // this is v at downright corner 
+    setToBackIntegrateDR[0] = 5.0e-3*interval(-1,1);     // this is v at downright corner 
     setToBackIntegrateDR[1] = 0.7e-2*interval(-1,1);        // this is yu at downright corner
 
     // covering checks 
 
+
     if( _verbose )
-    {
-      cout <<  (*leftMap).checkCovering( setToIntegrateDL, setToBackIntegrateUL ) << "! \n";
-      cout <<  (*rightMap).checkCovering( setToIntegrateUR, setToBackIntegrateDR ) << "! \n";
-    }
+      cout << "\n ------------------- LEFT SIDE COVERING CHECKS: -------------------------- \n \n";
+    if( !(*leftMap).checkCovering( setToIntegrateDL, setToBackIntegrateUL, _verbose )  ) 
+      throw "FAILURE TO CHECK COVERINGS IN THE FAST REGIME (LEFT MAP)! \n";
+
+    if( _verbose )
+      cout << "\n ------------------- RIGHT SIDE COVERING CHECKS: -------------------------- \n \n";
+    if( !(*rightMap).checkCovering( setToIntegrateUR, setToBackIntegrateDR, _verbose )  )    
+      throw "FAILURE TO CHECK COVERINGS IN THE FAST REGIME (RIGHT MAP)! \n";
 
     delete leftMap;
     delete rightMap;
@@ -184,11 +191,9 @@ void FhnVerifyExistenceOfPeriodicOrbit( interval _theta, interval _eps, bool _ve
     longIsolatingSegment UpSegment( Fhn_vf, ULSegment.GammaRight, URSegment.GammaLeft, PUL, PUR, ULface, URface, _longSegmentDivCount );
     longIsolatingSegment DownSegment( Fhn_vf, DLSegment.GammaRight, DRSegment.GammaLeft, PDL, PDR, DLface, DRface, _longSegmentDivCount ); 
 
-    if( !( ULSegment.segmentEnclosure[0] > ULSegment.segmentEnclosure[2] && UpSegment.segmentEnclosure[0] > UpSegment.segmentEnclosure[2] && 
-          URSegment.segmentEnclosure[0] > URSegment.segmentEnclosure[2] ) )
+    if( !( ULSegment.segmentEnclosure[0] > ULSegment.segmentEnclosure[2] ) )
       throw "MISALIGNMENT OF ONE OF THE UPPER SEGMENTS! \n";
-    if( !( DLSegment.segmentEnclosure[0] < DLSegment.segmentEnclosure[2] && DownSegment.segmentEnclosure[0] < DownSegment.segmentEnclosure[2] && 
-          DRSegment.segmentEnclosure[0] < DRSegment.segmentEnclosure[2] ) )
+    if( !( DLSegment.segmentEnclosure[0] < DLSegment.segmentEnclosure[2] ) )
       throw "MISALIGNMENT OF ONE OF THE LOWER SEGMENTS! \n";      // checks on whether we are above/below u=v plane for upper/lower segments
 
     IVector UpSegment_entranceAndExitVerification( UpSegment.entranceAndExitVerification( _longSubsegmentCount ) );
@@ -208,7 +213,7 @@ void FhnVerifyExistenceOfPeriodicOrbit( interval _theta, interval _eps, bool _ve
       cout << "\n --- \n";   
     };
 
-    // ISOLATION CAN BE ALSO CHECKED NOW FOR EACH SUBSEGMENT IN SEGMENTS.HPP TO THROW EXCEPTION FASTER, SEE COMMENTED LINES IN SEGMENTS.HPP
+    // ISOLATION CAN BE ALSO CHECKED NOW FOR EACH SUBSEGMENT IN SEGMENTS.HPP TO THROW AN EXCEPTION QUICKER, SEE COMMENTED LINES IN SEGMENTS.HPP
     if( !( UpSegment_entranceAndExitVerification[0] < 0. && UpSegment_entranceAndExitVerification[1] < 0. 
           && UpSegment_entranceAndExitVerification[2] > 0. && UpSegment_entranceAndExitVerification[3] > 0. ) )
       throw "ISOLATION ERROR FOR ONE OF THE UPPER REGULAR SEGMENTS! \n";

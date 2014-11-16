@@ -207,7 +207,8 @@ public:
                                                                                // with transforming the result of Poincare map by inverseMatrix(P2)
   }
 
-
+  // DELETE THIS CODE? I DO NOT USE IT ANYMORE AND IT WOULD NEED FIXES. MIDPOINCARE MAP IS USED INSTEAD.
+/*
   IVector operator()(const IVector& theSet) // we give a set in local variables on one section centered on 0 (ys & v_centered) return in variables on the other (v_centered & yu)
   {
     IVector resultArr(2);
@@ -236,9 +237,6 @@ public:
         Set_ij[0] = ( theSet[0].rightBound() - theSet[0].leftBound() )*ti + theSet[0].leftBound();    // subdivision of ys coordinate
         Set_ij[2] = ( theSet[1].rightBound() - theSet[1].leftBound() )*tj + theSet[1].leftBound();    // subdivision of v coordinate
 
-  /*      if( dim > 3 )  // checks whether we have parameters
-          for( int k=3; k < dim; k++ )
-            Set_ij[k] = 0.; // params[k-3];      // we embed parameters  */ // this part of code is probably deprecated since we embedded the parameters in the constructor
 
         C0HOTripletonSet setAff( section1CenterVector, P1, Set_ij ); // the set moved to default space, observe that parameters remain unchanged
 
@@ -260,7 +258,7 @@ public:
       }
     }
     return resultArr; 
-  }
+  }*/
 };
 
 
@@ -289,7 +287,7 @@ public:
     midSection( midCenterVector, midCenterVector ),
     vectorFieldRev( _vectorFieldRev )
   {
-    ICoordinateSection tempSection( dim, 0, ( (91./100.)*_GammaU1[0] + (9./100.)*_GammaU2[0] ) ); // an auxiliary section u = ( GammaU1[0] + GammaU2[0] )/2
+    ICoordinateSection tempSection( dim, 0, ( (80./100.)*_GammaU1[0] + (20./100.)*_GammaU2[0] ) ); 
 
     ITaylor tempSolver( vectorField, order );
     IPoincareMap tempPM( tempSolver, tempSection );
@@ -353,7 +351,7 @@ public:
     midSection( midCenterVector, midCenterVector ),
     vectorFieldRev( _vectorFieldRev )
   {
-    ICoordinateSection tempSection( dim, 0, ( (945./1000.)*_GammaU1[0] + (55./1000.)*_GammaU2[0] ) ); // an auxiliary section u = ( GammaU1[0] + GammaU2[0] )/2
+    ICoordinateSection tempSection( dim, 0, ( (80./100.)*_GammaU1[0] + (20./100.)*_GammaU2[0] ) ); // an auxiliary section u = ( GammaU1[0] + GammaU2[0] )/2
 
     ITaylor tempSolver( vectorField, order );
     IPoincareMap tempPM( tempSolver, tempSection );
@@ -501,7 +499,7 @@ public:
   }
 
 
-  bool checkCovering( const IVector& Set1, const IVector& Set2 )  // both Set1 and Set2 are 2-dim and have first variable stable second unstable ( Set1 : ys, v; Set2 : v, yu )
+  bool checkCovering( const IVector& Set1, const IVector& Set2, bool _verbose )  // both Set1 and Set2 are 2-dim and have first variable stable second unstable ( Set1 : ys, v; Set2 : v, yu )
   {
     IVector PSet1( integrateToMidSection( Set1, 0 ) );
     IVector PSetUL1( integrateToMidSection( leftU(Set1), 0 ) );
@@ -515,18 +513,22 @@ public:
     IVector setToBackCover( shrinkAndExpand( PSet1, 1. + EPS ) );       // we define a set that is covered by midPM( Set1 ), shrinkAndExpand adjust stable direction
     setToBackCover[1] = interval( (PSetUL1[1] + EPS).rightBound(), (PSetUR1[1] - EPS).leftBound() );    // here we adjust the unstable direction
    
-    cout << "PSetSL2[0] <? setToBackCover[0].leftBound() " <<  PSetSL2[0].rightBound() << " " << setToBackCover[0].leftBound() << "\n";
-    cout << "PSetSR2[0] >? setToBackCover[0].rightBound() " <<  PSetSR2[0].leftBound() << " " << setToBackCover[0].rightBound() << "\n";
-    cout << "subsetInterior( PSet2[1], setToBackCover[1] )? " << PSet2[1] << " " << setToBackCover[1] << "\n";
+    if( _verbose )
+    {
+      cout << "Right bound of image of left stable edge for the backcovering set: " <<  PSetSL2[0].rightBound() 
+        << "\nLeft bound of stable direction for the set to be covered: " << setToBackCover[0].leftBound();
+      cout << "\n --- \n";
+      cout << "Right bound of image of left stable edge for the backcovering set: " <<  PSetSR2[0].leftBound() 
+        << "\nLeft bound of stable direction for the set to be covered: " << setToBackCover[0].rightBound();
+      cout << "\n --- \n";
+      cout << "Bound of the unstable direction projection of left stable edge for backcovering: " << PSet2[1] 
+        << "\nUnstable direction of set to be backcovered: " << setToBackCover[1] << "\n";
+    }
 
 
     if( !( PSetUL1[1] + EPS < 0. && PSetUR1[1] - EPS > 0. && PSetSL2[0] + EPS < 0. && PSetSR2[0] - EPS > 0. ) )  // some reality checks for hyperbolicity
-     throw "INTEGRATION TO MIDSECTION ERROR 1! \n";
+     throw "INTEGRATION TO MIDSECTION ERROR! \n";
    
- 
-    if( !( containsZero( PSet1 ) && containsZero( PSet2 ) && containsZero( setToBackCover ) ) )     // some of these "reality checks" may be redundant but better to have them
-      throw "INTEGRATION TO MIDSECTION ERROR 2! \n";                                                  // to ensure all alignments are correct
-
     if( PSetSL2[0] < setToBackCover[0].leftBound() && PSetSR2[0] > setToBackCover[0].rightBound() && subsetInterior( PSet2[1], setToBackCover[1] ) )
       return 1;
     else 

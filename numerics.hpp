@@ -102,6 +102,7 @@ public:
       throw "EIGENVALUES OF FAST SUBSYSTEM AT STATIONARY POINTS NOT REAL! \n";
 
     // we want to have first eigenvector stable, second unstable. We do not swap eigenvalues since we don't use them later. Slows down everything by ~30s
+    // commented because we already have the right ones
  /*   if( EigenvalU_real[0] > EigenvalU_real[1] )
       matrixAlgorithms::columnExchange( EigenvectU_real, 1, 2 );
 
