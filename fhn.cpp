@@ -42,7 +42,7 @@ int main(){
 
   interval theta = interval(61.)/100.; // theta = 0.53 also works 
   interval eps = interval(0.,1.)/1e4;  
-  bool verbose = 0; 
+  bool verbose = 1; 
   bool with_params = 0; // allowing parameters to evolve as variables with velocity 0 does not improve significantly the results
   
   FhnVerifyExistenceOfPeriodicOrbit( theta, eps, verbose, with_params );
@@ -50,11 +50,11 @@ int main(){
   eps = interval(1.,1.5)/1e4;  
   FhnVerifyExistenceOfPeriodicOrbit( theta, eps, verbose, with_params );
  
-  /*
+ /* 
   eps = interval(1.5,2.)/1e4;  
   FhnVerifyExistenceOfPeriodicOrbit( theta, eps, verbose, with_params );
   // this already fails
-  */
+
 
   // other thetas:
 
@@ -74,7 +74,7 @@ int main(){
   eps = interval(0.,1.)/2e4;
 
   FhnVerifyExistenceOfPeriodicOrbit( theta, eps, verbose, with_params );
-
+  */
 
 
   return 0;
