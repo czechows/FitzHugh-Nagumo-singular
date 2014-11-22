@@ -57,20 +57,7 @@ bool isCovering( const IVector& setCovering, const IMatrix& setCoveringCoord, co
    return 0;
 };
 
-/*
-bool isBackwardCovering( IVector& setCovering, const IMatrix& setCoveringCoord, IVector& setToCover ) 
-                                                      // verifies backward covering between image of setCovering by a matrix setCoveringCoord over setToCover 
-                                                      // first variable stable second unstable
-{
- bool leftCheck( (setCoveringCoord*( leftS(setCovering) ))[0] < setToCover[0].leftBound() );
- bool rightCheck( (setCoveringCoord*( rightS(setCovering) ))[0] > setToCover[0].rightBound() );
 
- if( leftCheck && rightCheck && subsetInterior( (setCoveringCoord*setCovering)[1], setToCover[1] ) ) 
-  return 1;
- else
-   return 0;
-};
-*/
 
 IVector shrinkAndExpand(const IVector &N, interval factor)  // shrinks a rectangle in unstable direction and expands it in stable to get a covering (for example by original rectangle)
 {
@@ -104,7 +91,8 @@ void orthogonalizeRelativeColumn( IMatrix& matrixToOrthogonalize, unsigned int c
 /* ---------------------------- POINCARE MAPS ----------------------------------------- */
 /* ------------------------------------------------------------------------------------ */
 
-class FhnPoincareMap
+class FhnPoincareMap // this class was originally used to integrate from section near one corner point to section near another. However, this functionality was removed,
+                    // and now it only serves as a base class for midPoincareMap which integrates a section midway between the corner points
 {
 public:
   int dim;          // phase space dimension
@@ -206,59 +194,6 @@ public:
                                                                                // normal vector is one of the rows of inverseMatrix(P2), that matches
                                                                                // with transforming the result of Poincare map by inverseMatrix(P2)
   }
-
-  // DELETE THIS CODE? I DO NOT USE IT ANYMORE AND IT WOULD NEED FIXES. MIDPOINCARE MAP IS USED INSTEAD.
-/*
-  IVector operator()(const IVector& theSet) // we give a set in local variables on one section centered on 0 (ys & v_centered) return in variables on the other (v_centered & yu)
-  {
-    IVector resultArr(2);
-
-    IMatrix P2Alt( P2 );
-    for( int k = 1; k <= dim; k++ )
-      P2Alt(k,1) = Transpose(inverseMatrix(P2))(k,1);  // we need to set the altered normal vector to the change of coordinates matrix DEPRECATED???
-
-    for(int i=1; i<=disc; i++)
-    {
-      int disc1;
-      if( theSet[0].leftBound() == theSet[0].rightBound() )   // check whether we integrate one of the unstable edges of an h-set
-        disc1=1;
-      else 
-        disc1=disc;
- 
-      interval ti = interval(i-1, i)/disc;
-
-      for(int j=1; j<=disc1; j++)
-      {
-        interval tj = interval(j-1, j)/disc1;
-
-        IVector Set_ij( dim ); // the centered part of the set with expanded directions
-        Set_ij.clear();        
-
-        Set_ij[0] = ( theSet[0].rightBound() - theSet[0].leftBound() )*ti + theSet[0].leftBound();    // subdivision of ys coordinate
-        Set_ij[2] = ( theSet[1].rightBound() - theSet[1].leftBound() )*tj + theSet[1].leftBound();    // subdivision of v coordinate
-
-
-        C0HOTripletonSet setAff( section1CenterVector, P1, Set_ij ); // the set moved to default space, observe that parameters remain unchanged
-
-        interval returntime(0.);
-        IVector result = pm( setAff, GammaU2, inverseMatrix(P2), returntime ); // result is moved back to local coordinates, ys should be close to 0 
-                                                                                            // in other words P2Alt^-1( PM(setAff) - section2center ) is computed 
-                                                                                            // where section2center = _P2&y2vector + _GammaU2
-                                                                                            //  IMPORTANT: I NEED TO CHANGE HERE TO GAMMA2?
-        if( i==1 && j==1)
-        {
-          resultArr[0] = result[2];   // being on a section given by ys we only return v,yu coordinates, now v is the stable
-          resultArr[1] = result[1];  
-        }
-        else
-        {
-          resultArr[0] = intervalHull(resultArr[0], result[2]);
-          resultArr[1] = intervalHull(resultArr[1], result[1]);
-        }
-      }
-    }
-    return resultArr; 
-  }*/
 };
 
 
@@ -516,13 +451,13 @@ public:
     if( _verbose )
     {
       cout << "Right bound of image of left stable edge for the backcovering set: " <<  PSetSL2[0].rightBound() 
-        << "\nLeft bound of stable direction for the set to be covered: " << setToBackCover[0].leftBound();
+        << "\nLeft bound of the stable direction for the set to be covered: " << setToBackCover[0].leftBound();
       cout << "\n --- \n";
-      cout << "Right bound of image of left stable edge for the backcovering set: " <<  PSetSR2[0].leftBound() 
-        << "\nLeft bound of stable direction for the set to be covered: " << setToBackCover[0].rightBound();
+      cout << "Left bound of image of right stable edge for the backcovering set: " <<  PSetSR2[0].leftBound() 
+        << "\nRight bound of the stable direction for the set to be covered: " << setToBackCover[0].rightBound();
       cout << "\n --- \n";
-      cout << "Bound of the unstable direction projection of left stable edge for backcovering: " << PSet2[1] 
-        << "\nUnstable direction of set to be backcovered: " << setToBackCover[1] << "\n";
+      cout << "Bound of the unstable direction projection of the image of the backcovering set: " << PSet2[1] 
+        << "\nUnstable direction of the set to be backcovered: " << setToBackCover[1] << "\n";
     }
 
 
