@@ -47,7 +47,7 @@ int main(){
   
   FhnVerifyExistenceOfPeriodicOrbit( theta, eps, verbose, with_params );
 
-  eps = interval(1.,1.5)/1e4;  
+  eps = interval("1e-4","1.5e-4");  
   FhnVerifyExistenceOfPeriodicOrbit( theta, eps, verbose, with_params );
  
  /* 
