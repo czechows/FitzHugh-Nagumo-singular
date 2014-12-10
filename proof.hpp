@@ -10,8 +10,8 @@
 /* ------------------------------------------------------------------------------------ */
 
 
-void FhnVerifyExistenceOfPeriodicOrbit( interval _theta, interval _eps, bool _verbose = 0, bool withParams = 0, int _pMapDivCount = 40, 
-     int _longSubsegmentCount = 80, int _longSegmentDivCount = 120, int _cornerSegmentDivCount = 500 ) 
+void FhnVerifyExistenceOfPeriodicOrbit( interval _theta, interval _eps, bool _verbose = 0, bool withParams = 0, int _pMapDivCount = 20, 
+     int _longSubsegmentCount = 80, int _longSegmentDivCount = 110, int _cornerSegmentDivCount = 150 ) 
   // verbose on displays all the interval enclosures for Poincare maps / products of vector fields with normals; other parameters control respectively: 
   // number of subdivisions of sets to integrate (in each dimension), number of subsegments along slow manifolds, number of subdivisions of regular/corner segments
   // for evaluation of the scalar product of vector field with outward pointing normals
