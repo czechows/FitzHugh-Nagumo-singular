@@ -34,7 +34,6 @@ void FhnVerifyExistenceOfPeriodicOrbit( interval _theta, interval _eps, bool _ve
 
     GammaQuad_correct( _theta, GammaUL, GammaDL, GammaUR, GammaDR );                              // we correct the initial guesses by nonrigorous Newtons methods (see numerics.hpp)
 
- 
     if( !(GammaUL[0] > GammaDL[0] && GammaUR[0] > GammaDR[0] && GammaUR[2] > GammaUL[2] && GammaDR[2] > GammaDL[2] ) )
       throw "NEWTON CORRECTION METHOD FOR CORNER POINTS ERROR! \n";
         

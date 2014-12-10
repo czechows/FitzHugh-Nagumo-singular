@@ -1,6 +1,7 @@
 #include <iostream>
 #include "capd/capdlib.h"
 #include "capd/dynsys/DiscreteDynSys.h"
+#include "time.h"
 
 using std::cout;
 
@@ -38,18 +39,32 @@ IMap Fhn_vf_withParams_rev("var:u,w,v,theta,eps;fun:-w,(-2/10)*(theta*w+u*(u-1)*
 
 int main(){
 
+  time_t start1,end1;
+
+  time (&start1);
   cout.precision(15);
 
-  interval theta = interval(61.)/100.; // theta = 0.53 also works 
+  interval theta = interval(61.)/100.;  
   interval eps = interval(0.,1.)/1e4;  
   bool verbose = 1; 
   bool with_params = 0; // allowing parameters to evolve as variables with velocity 0 does not improve significantly the results
   
   FhnVerifyExistenceOfPeriodicOrbit( theta, eps, verbose, with_params );
 
+  time (&end1);
+  double dif1 = difftime( end1, start1 );
+  cout << "Elapsed time for the proof for parameter range eps = " << eps << " is " << dif1 << " seconds. \n";
+
+  time_t start2,end2;
+  time (&start2);
   eps = interval("1e-4","1.5e-4");  
+  
   FhnVerifyExistenceOfPeriodicOrbit( theta, eps, verbose, with_params );
- 
+  
+  time (&end2);
+  double dif2 = difftime( end2, start2 );
+  cout << "Elapsed time for the proof for parameter range eps = " << eps << " is " << dif2 << " seconds. \n";
+
  /* 
   eps = interval(1.5,2.)/1e4;  
   FhnVerifyExistenceOfPeriodicOrbit( theta, eps, verbose, with_params );
