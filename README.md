@@ -33,7 +33,7 @@ To execute the program call
 
 To see details from the proof at runtime change the verbose variable in fhn.cpp from 0 to 1 and recompile.
 
-Program was tested under GCC 4.9.2 and CAPD revision 378.
+Program was tested under GCC 4.9.2 and CAPD revision 568.
 
 
 [CONTACT INFO]
