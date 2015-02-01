@@ -11,7 +11,7 @@
 
 
 void FhnVerifyExistenceOfPeriodicOrbit( interval _theta, interval _eps, bool _verbose = 0, bool withParams = 0, int _pMapDivCount = 20, 
-     int _longSubsegmentCount = 80, int _longSegmentDivCount = 110, int _cornerSegmentDivCount = 150 ) 
+     int _chainSubsegmentCount = 80, int _chainSegmentDivCount = 110, int _cornerSegmentDivCount = 150 ) 
   // verbose on displays all the interval enclosures for Poincare maps / products of vector fields with normals; other parameters control respectively: 
   // number of subdivisions of sets to integrate (in each dimension), number of subsegments along slow manifolds, number of subdivisions of regular/corner segments
   // for evaluation of the scalar product of vector field with outward pointing normals
@@ -36,12 +36,13 @@ void FhnVerifyExistenceOfPeriodicOrbit( interval _theta, interval _eps, bool _ve
 
     if( !(GammaUL[0] > GammaDL[0] && GammaUR[0] > GammaDR[0] && GammaUR[2] > GammaUL[2] && GammaDR[2] > GammaDL[2] ) )
       throw "NEWTON CORRECTION METHOD FOR CORNER POINTS ERROR! \n";
-        
-    interval ruDL(0.015);           // distances from appropriate sections in appropr. direction (stable for sections to integrate from, unstable for sections to integrate onto)
-    interval rsUL(0.015);         
 
-    interval ruUR(0.029);
-    interval rsDR(0.03);
+    // below distances from appropriate sections in appropr. direction (stable for sections to integrate from, unstable for sections to integrate onto)
+    interval ruDL(0.015);    // this is a,c in the paper      
+    interval rsUL(0.015);   // this is b,d in the paper
+
+    interval ruUR(0.029);  // this is a, c in the paper
+    interval rsDR(0.03);   // this is b, d in the paper
 
     IMatrix PUL( coordChange( Fhn_vf, GammaUL ) ), 
             PUR( coordChange( Fhn_vf, GammaUR ) ), 
@@ -49,8 +50,8 @@ void FhnVerifyExistenceOfPeriodicOrbit( interval _theta, interval _eps, bool _ve
             PDR( coordChange( Fhn_vf, GammaDR ) ); 
     
 
-    midPoincareMap *leftMap;
-    midPoincareMap *rightMap;
+    midPoincareMap *leftMap; // this class implements the Poincare maps described in the paper as pmUL, pmDL onto leftSection
+    midPoincareMap *rightMap; // this class implements the Poincare maps described in the paper as pmUR, pmDR onto rightSection
 
     if( withParams )
     {
@@ -187,25 +188,25 @@ void FhnVerifyExistenceOfPeriodicOrbit( interval _theta, interval _eps, bool _ve
 
     // up down isolating segments
 
-    longIsolatingSegment UpSegment( Fhn_vf, ULSegment.GammaRight, URSegment.GammaLeft, PUL, PUR, ULface, URface, _longSegmentDivCount );
-    longIsolatingSegment DownSegment( Fhn_vf, DLSegment.GammaRight, DRSegment.GammaLeft, PDL, PDR, DLface, DRface, _longSegmentDivCount ); 
+    chainOfSegments UpSegment( Fhn_vf, ULSegment.GammaRight, URSegment.GammaLeft, PUL, PUR, ULface, URface, _chainSegmentDivCount );
+    chainOfSegments DownSegment( Fhn_vf, DLSegment.GammaRight, DRSegment.GammaLeft, PDL, PDR, DLface, DRface, _chainSegmentDivCount ); 
 
     if( !( ULSegment.segmentEnclosure[0] > ULSegment.segmentEnclosure[2] ) )
       throw "MISALIGNMENT OF ONE OF THE UPPER SEGMENTS! \n";
     if( !( DLSegment.segmentEnclosure[0] < DLSegment.segmentEnclosure[2] ) )
       throw "MISALIGNMENT OF ONE OF THE LOWER SEGMENTS! \n";      // checks on whether we are above/below u=v plane for upper/lower segments
 
-    IVector UpSegment_entranceAndExitVerification( UpSegment.entranceAndExitVerification( _longSubsegmentCount ) );
-    IVector DownSegment_entranceAndExitVerification( DownSegment.entranceAndExitVerification( _longSubsegmentCount ) );
+    IVector UpSegment_entranceAndExitVerification( UpSegment.entranceAndExitVerification( _chainSubsegmentCount ) );
+    IVector DownSegment_entranceAndExitVerification( DownSegment.entranceAndExitVerification( _chainSubsegmentCount ) );
 
     if( _verbose )
     {
-      cout << "\n ---------------------------- UP, DOWN SEGMENTS ISOLATION: ---------------------------- \n \n";
+      cout << "\n ---------------------------- UPPER, LOWER CHAINS OF SEGMENTS ISOLATION: ---------------------------- \n \n";
 
-      cout << "Interval hull of enclosures of scalar products of the vector field with up segments (not including corner ones, left/right entrance faces first, then exit faces): \n \n"
+      cout << "Interval hull of enclosures of scalar products of the vector field with the upper chain of segments (not including corner ones, left/right entrance faces first, then exit faces): \n \n"
         << UpSegment_entranceAndExitVerification << "\n";  
       cout << "\n --- \n";
-      cout << "Interval hull of enclosures of scalar products of the vector field with down segments (not including corner ones, left/right entrance faces first, then exit faces): \n \n"
+      cout << "Interval hull of enclosures of scalar products of the vector field with the lower chain segments (not including corner ones, left/right entrance faces first, then exit faces): \n \n"
         << DownSegment_entranceAndExitVerification << "\n \n";  
  
       cout << "\n --- \n";

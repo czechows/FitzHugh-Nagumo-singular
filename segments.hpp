@@ -2,7 +2,7 @@
 /* -----------------------------------------------------------------------------------------
  * This is a header file to fhn.cpp providing classes for isolating segments: FhnIsolatingSegment,
  * which is used when a constructed segment is short and one can stick with one affine coordinate change
- * to check the isolation and longIsolatingSegment - a derived class
+ * to check the isolation and chainOfSegments - a derived class
  * to construct a chain of (possibly rotating) isolating segments and check covering relations 
  * between their faces. We also provide a coordinate change function to straightened fast coordinates
  * along the slow manifold.
@@ -88,10 +88,10 @@ class FhnIsolatingSegment                 // class for verification of isolation
 public:
   IMap vectorField;
   IMatrix P;                              // diagonalization matrix along given slow manifold branch
-  IVector GammaLeft;                      // slow manifold left end point 
-  IVector GammaRight;                     // slow manifold right end point 
-  IVector leftFace;                       // left face of the box (ys x yu centered at 0)
-  IVector rightFace;                      // right face of the box (ys x yu centered at 0)
+  IVector GammaLeft;                      // slow manifold left end point - this variable name is Front in the paper for segments with u>v and Rear elsewise 
+  IVector GammaRight;                     // slow manifold right end point - this variable name is Rear in the paper for segments with u>v and Front elsewise
+  IVector leftFace;                       // left face of the box (ys x yu centered at 0) = [-b,b] x [-a,a] in the paper for segments with u>v and [-d,d] x [-c,c] elsewise
+  IVector rightFace;                      // right face of the box (ys x yu centered at 0) = [-d,d] x [-c,c] in the paper for segments with u>v and [-b,b] x [-a,a] elsewise
   interval disc;                          // number of discretization points
   IMatrix InvP;                           // P^(-1)
   DiscreteDynSys<IMap> vectorFieldEval;   // this is only to evaluate the vector field on C0Rect2Set in most effective way - not a real dynamical system
@@ -268,15 +268,15 @@ public:
 };
 
 
-// ------------------------ class longIsolatingSegment ------------------------
+// ------------------------ class chainOfSegments ------------------------
 
 
-class longIsolatingSegment : public FhnIsolatingSegment
+class chainOfSegments : public FhnIsolatingSegment
 {
 public:
   IMatrix endP;
 
-  longIsolatingSegment( IMap _vectorField, const IVector& _GammaLeft, const IVector& _GammaRight, const IMatrix& _P, const IMatrix& _endP, 
+  chainOfSegments( IMap _vectorField, const IVector& _GammaLeft, const IVector& _GammaRight, const IMatrix& _P, const IMatrix& _endP, 
                         const IVector& _leftFace, const IVector& _rightFace, interval _disc )
   : FhnIsolatingSegment( _vectorField, _GammaLeft, _GammaRight, _P, _leftFace, _rightFace, _disc ),
     endP(_endP)

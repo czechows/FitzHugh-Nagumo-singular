@@ -9,7 +9,9 @@ using namespace capd;
 using namespace matrixAlgorithms;
 using namespace dynsys;
 
-// in all diagonalizations, unless otherwise stated, first variable is stable second unstable third (if present) neutral
+// in all diagonalizations, unless otherwise stated, first variable is stable/entry second unstable/exit third (if present) central
+// in the paper we later changed the first variable to be unstable/exit second stable/entry third (if present) central 
+// this was to match some conventions from previous papers on h-sets
 
 const interval EPS = interval(1./1e15);  // small number greater than zero for coverings
 const double accuracy = 1e-12;           // accuracy for nonrigorous numerics (i.e. approximation of the slow manifold)
