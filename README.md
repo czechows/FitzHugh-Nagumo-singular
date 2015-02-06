@@ -15,12 +15,15 @@ For a copy of the GNU General Public License, see <http://www.gnu.org/licenses/>
 
 [INSTALLATION INSTRUCTIONS UNDER LINUX]
 
-You will need C++11 and preinstalled CAPD libraries.
+You will need C++11 and preinstalled CAPD 4.0 libraries.
 The latter can be downloaded at http://capd.ii.uj.edu.pl/
-also see http://krzesanica.ii.uj.edu.pl/capd/doc/capd_compilation.html for compilation instructions
-and http://krzesanica.ii.uj.edu.pl/capd/doc/ for documentation.
+also see http://mnich.ii.uj.edu.pl/capd/doc4/capd_compilation.html for compilation instructions
+and http://mnich.ii.uj.edu.pl/capd/doc4/ for documentation.
+Note: it is advisable to run 
+  ldconfig
+after installation of the libraries.
 
-To compile the source first open makefile
+To compile the source, first open makefile
 and change the right hand side of 
   CAPDBINDIR =/usr/local/bin/
 to the folder where the capd scripts are installed.
@@ -31,9 +34,9 @@ inside the program directory.
 To execute the program call
   ./fhn
 
-To see details from the proof at runtime change the verbose variable in fhn.cpp from 0 to 1 and recompile.
+To show details from the proof at runtime change the verbose variable in fhn.cpp from 0 to 1 and recompile.
 
-Program was tested under GCC 4.9.2 and CAPD revision 568.
+Program was tested under GCC 4.9.2 and CAPD SVN revision 568.
 
 
 [CONTACT INFO]
