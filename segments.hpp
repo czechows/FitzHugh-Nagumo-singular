@@ -92,19 +92,19 @@ public:
   IVector GammaRight;                     // slow manifold right end point - this variable name is Rear in the paper for segments with u>v and Front elsewise
   IVector leftFace;                       // left face of the box (ys x yu centered at 0) = [-b,b] x [-a,a] in the paper for segments with u>v and [-d,d] x [-c,c] elsewise
   IVector rightFace;                      // right face of the box (ys x yu centered at 0) = [-d,d] x [-c,c] in the paper for segments with u>v and [-b,b] x [-a,a] elsewise
-  interval disc;                          // number of discretization points
+  interval div;                          // number of subdivisions
   IMatrix InvP;                           // P^(-1)
   DiscreteDynSys<IMap> vectorFieldEval;   // this is only to evaluate the vector field on C0Rect2Set in most effective way - not a real dynamical system
   IVector segmentEnclosure;               // whether we are moving to the right or to the left on the slow variable     
 
-  FhnIsolatingSegment( IMap _vectorField, const IVector& _GammaLeft, const IVector& _GammaRight, const IMatrix& _P, const IVector& _leftFace, const IVector& _rightFace, interval _disc )
+  FhnIsolatingSegment( IMap _vectorField, const IVector& _GammaLeft, const IVector& _GammaRight, const IMatrix& _P, const IVector& _leftFace, const IVector& _rightFace, interval _div )
     : vectorField(_vectorField), 
       P(_P),
       GammaLeft(_GammaLeft),
       GammaRight(_GammaRight),
       leftFace(_leftFace),
       rightFace(_rightFace),
-      disc(_disc),
+      div(_div),
       InvP(inverseMatrix(P)),
       vectorFieldEval(vectorField),
       segmentEnclosure( intervalHull( GammaLeft + P*leftFace, GammaRight + P*rightFace ) ) // a rough enclosure for the isolating segment to check whether
@@ -133,9 +133,9 @@ public:
     interval NormalSLxVectorField;
     interval NormalSRxVectorField;
 
-    for(int i=1; i <= disc; i++)
+    for(int i=1; i <= div; i++)
     {
-      interval ti = interval(i-1, i)/disc;
+      interval ti = interval(i-1, i)/div;
 
       IVector Gamma_i( ( GammaRight - GammaLeft )*ti + GammaLeft );
   
@@ -155,9 +155,9 @@ public:
                                        ( ( rightFace[1].rightBound() - leftFace[1].rightBound() )*ti + leftFace[1].rightBound() ).rightBound() ); // remove some rightBounds?
       faceSR_i[2] = 0.;
  
-      for(int j=1; j <= disc; j++)
+      for(int j=1; j <= div; j++)
       {
-        interval tj = interval(j-1, j)/disc;
+        interval tj = interval(j-1, j)/div;
 
         IVector faceSL_ij(faceSL_i);
         faceSL_ij[1] = ( faceSL_i[1].rightBound() - faceSL_i[1].leftBound() )*tj + faceSL_i[1].leftBound();
@@ -209,9 +209,9 @@ public:
     interval NormalULxVectorField;
     interval NormalURxVectorField;
 
-    for(int i=1; i <= disc; i++)
+    for(int i=1; i <= div; i++)
     {
-      interval ti = interval(i-1, i)/disc;
+      interval ti = interval(i-1, i)/div;
 
       IVector Gamma_i( ( GammaRight - GammaLeft )*ti + GammaLeft );
   
@@ -231,9 +231,9 @@ public:
       faceUR_i[1] = ( rightFace[1].rightBound() - leftFace[1].rightBound() )*ti + leftFace[1].rightBound();
       faceUR_i[2] = 0.;
       
-      for(int j=1; j <= disc; j++)
+      for(int j=1; j <= div; j++)
       {
-          interval tj = interval(j-1, j)/disc;
+          interval tj = interval(j-1, j)/div;
 
           IVector faceUL_ij(faceUL_i);
           faceUL_ij[0] = ( faceUL_i[0].rightBound() - faceUL_i[0].leftBound() )*tj + faceUL_i[0].leftBound();
@@ -277,8 +277,8 @@ public:
   IMatrix endP;
 
   chainOfSegments( IMap _vectorField, const IVector& _GammaLeft, const IVector& _GammaRight, const IMatrix& _P, const IMatrix& _endP, 
-                        const IVector& _leftFace, const IVector& _rightFace, interval _disc )
-  : FhnIsolatingSegment( _vectorField, _GammaLeft, _GammaRight, _P, _leftFace, _rightFace, _disc ),
+                        const IVector& _leftFace, const IVector& _rightFace, interval _div )
+  : FhnIsolatingSegment( _vectorField, _GammaLeft, _GammaRight, _P, _leftFace, _rightFace, _div ),
     endP(_endP)
   // here we store an end coordinate change to be able to verify the last covering
   {
@@ -307,7 +307,7 @@ public:
   
   IVector entranceAndExitVerification(int N_Segments) // first two coordinates are hulls of normalSLxVectorField, normalSRxVectorField, then normalULxVectorField and normalURxVectorField
     // exit and entrance verification are done together here to speed up calculations, reduce amount of code and memory used, etc.
-    // N_Segments is the number of subsegments of a long isolating segment; disc is then number of discretizations of each such subsegment
+    // N_Segments is the number of subsegments of a long isolating segment; div is then number of subdivisions of each such subsegment in each direction
   {
     IVector Gamma_i0( GammaLeft );
     IVector Gamma_i1(3);
@@ -358,7 +358,7 @@ public:
       P_i1 = endP;
      }
      
-     FhnIsolatingSegment Segment_i( vectorField, Gamma_i0, Gamma_i1, P_i1, Face_i0_adj, Face_i1, disc ); 
+     FhnIsolatingSegment Segment_i( vectorField, Gamma_i0, Gamma_i1, P_i1, Face_i0_adj, Face_i1, div ); 
     
      if( i == 1 )
      {

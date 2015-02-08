@@ -106,13 +106,13 @@ public:
   IPoincareMap pm;
   IMatrix P1;
   IMatrix P2;
-  int disc;         // number of subdivisions in each dimension (supports two, does not support subdivisions in parameter space) for integration of h-sets
+  int div;         // number of subdivisions in each dimension (supports two, does not support subdivisions in parameter space) for integration of h-sets
   IVector params;   // vector of parameters
   IVector GammaU1;
   IVector GammaU2;
 
   FhnPoincareMap( IMap _vectorField, const IMatrix& _P1, const IMatrix& _P2, const IVector& _GammaU1, const IVector& _GammaU2, 
-                                                                                        interval& _ru1, interval& _rs2, interval dir = interval(1.), int _disc=1 ) 
+                                                                                        interval& _ru1, interval& _rs2, interval dir = interval(1.), int _div=1 ) 
     : dim( 3 ),
       vectorField( _vectorField ),                               // a 3d vector field
       solver( vectorField, order ),
@@ -126,7 +126,7 @@ public:
       pm( solver, section2 ),
       P1( _P1 ),
       P2( _P2 ),
-      disc( _disc ),
+      div( _div ),
       params( 1 ),
       GammaU1( _GammaU1 ),
       GammaU2( _GammaU2 )
@@ -134,7 +134,7 @@ public:
   }
 
   FhnPoincareMap( IVector _params, IMap _vectorFieldWithParams, const IMatrix& _P1, const IMatrix& _P2, const IVector& _GammaU1, const IVector& _GammaU2, 
-                                                                                        interval& _ru1, interval& _rs2, interval dir = interval(1.), int _disc=1 ) 
+                                                                                        interval& _ru1, interval& _rs2, interval dir = interval(1.), int _div=1 ) 
     : dim( 3 + _params.dimension() ),
       vectorField( _vectorFieldWithParams ),                               
       solver( vectorField, order ),
@@ -146,7 +146,7 @@ public:
       pm ( solver, section2 ),
       P1( dim, dim ),
       P2( dim, dim ),
-      disc( _disc ),
+      div( _div ),
       params( _params ),
       GammaU1( dim ),
       GammaU2( dim )
@@ -215,8 +215,8 @@ public:
   IMap vectorFieldRev;
   
   midPoincareMap( IMap _vectorField, IMap _vectorFieldRev, const IMatrix& _P1, const IMatrix& _P2, const IVector& _GammaU1, const IVector& _GammaU2, 
-                                                                                        interval& _ru1, interval& _rs2, interval dir = interval(1.), int _disc=1 ) 
-  : FhnPoincareMap( _vectorField, _P1, _P2, _GammaU1, _GammaU2, _ru1, _rs2, dir, _disc ),
+                                                                                        interval& _ru1, interval& _rs2, interval dir = interval(1.), int _div=1 ) 
+  : FhnPoincareMap( _vectorField, _P1, _P2, _GammaU1, _GammaU2, _ru1, _rs2, dir, _div ),
     midCenterVector( dim ),
     midP( dim, dim ),
     midSection( midCenterVector, midCenterVector ),
@@ -278,9 +278,9 @@ public:
   }
   
   midPoincareMap( IVector _params, IMap _vectorField, IMap _vectorFieldRev, const IMatrix& _P1, const IMatrix& _P2, const IVector& _GammaU1, const IVector& _GammaU2, 
-                                                                                        interval& _ru1, interval& _rs2, interval dir = interval(1.), int _disc=1 ) 
+                                                                                        interval& _ru1, interval& _rs2, interval dir = interval(1.), int _div=1 ) 
     // the same but with params treated as variables of velocity 0, same as with second constructor of FhnPoincareMap
-  : FhnPoincareMap( _params, _vectorField, _P1, _P2, _GammaU1, _GammaU2, _ru1, _rs2, dir, _disc ),  
+  : FhnPoincareMap( _params, _vectorField, _P1, _P2, _GammaU1, _GammaU2, _ru1, _rs2, dir, _div ),  
     midCenterVector( dim ),
     midP( dim, dim ),
     midSection( midCenterVector, midCenterVector ),
@@ -360,27 +360,27 @@ public:
 
     IVector resultArr(2);
  
-    int disc_i;
-    int disc_j;
+    int div_i;
+    int div_j;
 
     if( theSet[0].leftBound() == theSet[0].rightBound() )   // check whether we integrate one of the unstable edges of an h-set
-       disc_j=1;
+       div_j=1;
     else 
-       disc_j=disc;
+       div_j=div;
   
     if( theSet[1].leftBound() == theSet[1].rightBound() )   // check whether we integrate one of the stable edges of an h-set
-       disc_i=1;
+       div_i=1;
     else 
-       disc_i=disc;
+       div_i=div;
 
-    for(int i=1; i<=disc_i; i++)
+    for(int i=1; i<=div_i; i++)
     {
 
-      interval ti = interval(i-1, i)/disc_i;
+      interval ti = interval(i-1, i)/div_i;
 
-      for(int j=1; j<=disc_j; j++)
+      for(int j=1; j<=div_j; j++)
       {
-        interval tj = interval(j-1, j)/disc_j;
+        interval tj = interval(j-1, j)/div_j;
 
         IVector Set_ij( dim ); // the centered part of the set with expanded directions
         Set_ij.clear();        
