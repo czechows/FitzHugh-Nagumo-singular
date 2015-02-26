@@ -1,7 +1,7 @@
 
 /* -----------------------------------------------------------------------------------------
- * This is a header file to fhn.cpp providing a non-rigorous coordinate change function 
- * to straightened variables and a rigorous proof of verification of periodic orbits
+ * This is a header file to fhn.cpp providing a rigorous procedure 
+ * of verification of existence of periodic orbits
  * in the FitzHugh-Nagumo system for given parameters theta, eps. 
  * * ----------------------------------------------------------------------------------------*/
 
