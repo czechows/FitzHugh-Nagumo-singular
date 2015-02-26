@@ -13,18 +13,14 @@ using namespace dynsys;
 // in the paper we later changed the first variable to be unstable/exit second stable/entry third (if present) central 
 // this was to match some conventions from previous papers on h-sets
 
+IMap *Fhn_vf;
+IMap *Fhn_vf_rev;
+IMap *Fhn_vf_withParams;
+IMap *Fhn_vf_withParams_rev;
+
 const interval EPS = interval(1./1e15);  // small number greater than zero for coverings
 const double accuracy = 1e-12;           // accuracy for nonrigorous numerics (i.e. approximation of the slow manifold)
 const int order = 18;                    // order for all the Taylor integrators (high is fast)
-
-IMap Fhn_vf("par:theta,eps;var:u,w,v;fun:w,(2/10)*(theta*w+u*(u-1)*(u-(1/10))+v),(eps/theta)*(u-v);"); 
-// FitzHugh-Nagumo vector field is u'=w, w'=0.2*(theta*w +u*(u-1)*(u-0.1)+v, v'= eps/theta * (u-v)
-IMap Fhn_vf_rev("par:theta,eps;var:u,w,v;fun:-w,(-2/10)*(theta*w+u*(u-1)*(u-(1/10))+v),(-eps/theta)*(u-v);"); 
-// reversed field for backward integration
-IMap Fhn_vf_withParams("var:u,w,v,theta,eps;fun:w,(2/10)*(theta*w+u*(u-1)*(u-(1/10))+v),(eps/theta)*(u-v),0,0;"); 
-// the same vector field with parameters as variables of velocity 0
-IMap Fhn_vf_withParams_rev("var:u,w,v,theta,eps;fun:-w,(-2/10)*(theta*w+u*(u-1)*(u-(1/10))+v),(-eps/theta)*(u-v),0,0;"); 
-// again, the reversed vector field with parameters of velocity 0
 
 #include "numerics.hpp"   // Warning! When changing the vector field, one needs to make manual changes in this header file (class FhnBifurcation)!
 #include "poincare.hpp"
@@ -42,6 +38,15 @@ IMap Fhn_vf_withParams_rev("var:u,w,v,theta,eps;fun:-w,(-2/10)*(theta*w+u*(u-1)*
 int main(){
 
   time_t start1,end1;
+
+  Fhn_vf = new IMap("par:theta,eps;var:u,w,v;fun:w,(2/10)*(theta*w+u*(u-1)*(u-(1/10))+v),(eps/theta)*(u-v);"); 
+  // FitzHugh-Nagumo vector field is u'=w, w'=0.2*(theta*w +u*(u-1)*(u-0.1)+v, v'= eps/theta * (u-v)
+  Fhn_vf_rev = new IMap("par:theta,eps;var:u,w,v;fun:-w,(-2/10)*(theta*w+u*(u-1)*(u-(1/10))+v),(-eps/theta)*(u-v);"); 
+  // reversed field for backward integration
+  Fhn_vf_withParams = new IMap("var:u,w,v,theta,eps;fun:w,(2/10)*(theta*w+u*(u-1)*(u-(1/10))+v),(eps/theta)*(u-v),0,0;"); 
+  // the same vector field with parameters as variables of velocity 0
+  Fhn_vf_withParams_rev = new IMap("var:u,w,v,theta,eps;fun:-w,(-2/10)*(theta*w+u*(u-1)*(u-(1/10))+v),(-eps/theta)*(u-v),0,0;"); 
+  // again, the reversed vector field with parameters of velocity 0
 
   time (&start1);
   cout.precision(15);

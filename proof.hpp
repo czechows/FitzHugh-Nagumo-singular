@@ -18,11 +18,11 @@ void FhnVerifyExistenceOfPeriodicOrbit( interval _theta, interval _eps, bool _ve
 {
   try                   // we check negations of all assumptions to throw exceptions, if no exception is thrown existence of the orbit is verified
   {
-    Fhn_vf.setParameter("theta",_theta);
-    Fhn_vf.setParameter("eps",_eps);
+    (*Fhn_vf).setParameter("theta",_theta);
+    (*Fhn_vf).setParameter("eps",_eps);
  
-    Fhn_vf_rev.setParameter("theta",_theta);
-    Fhn_vf_rev.setParameter("eps",_eps);
+    (*Fhn_vf_rev).setParameter("theta",_theta);
+    (*Fhn_vf_rev).setParameter("eps",_eps);
 
     IVector parameters({ _theta, _eps });
 
@@ -44,10 +44,10 @@ void FhnVerifyExistenceOfPeriodicOrbit( interval _theta, interval _eps, bool _ve
     interval ruUR(0.029);  // this is a, c in the paper
     interval rsDR(0.03);   // this is b, d in the paper
 
-    IMatrix PUL( coordChange( Fhn_vf, GammaUL ) ), 
-            PUR( coordChange( Fhn_vf, GammaUR ) ), 
-            PDL( coordChange( Fhn_vf, GammaDL ) ),  
-            PDR( coordChange( Fhn_vf, GammaDR ) ); 
+    IMatrix PUL( coordChange( *Fhn_vf, GammaUL ) ), 
+            PUR( coordChange( *Fhn_vf, GammaUR ) ), 
+            PDL( coordChange( *Fhn_vf, GammaDL ) ),  
+            PDR( coordChange( *Fhn_vf, GammaDR ) ); 
     
 
     midPoincareMap *leftMap; // this class implements the Poincare maps described in the paper as pmUL, pmDL onto leftSection
@@ -55,13 +55,13 @@ void FhnVerifyExistenceOfPeriodicOrbit( interval _theta, interval _eps, bool _ve
 
     if( withParams )
     {
-      leftMap = new midPoincareMap( parameters, Fhn_vf_withParams, Fhn_vf_withParams_rev, PDL, PUL, GammaDL, GammaUL, ruDL, rsUL, -1., _pMapDivCount );
-      rightMap = new midPoincareMap( parameters, Fhn_vf_withParams, Fhn_vf_withParams_rev, PUR, PDR, GammaUR, GammaDR, ruUR, rsDR, 1., _pMapDivCount );
+      leftMap = new midPoincareMap( parameters, *Fhn_vf_withParams, *Fhn_vf_withParams_rev, PDL, PUL, GammaDL, GammaUL, ruDL, rsUL, -1., _pMapDivCount );
+      rightMap = new midPoincareMap( parameters, *Fhn_vf_withParams, *Fhn_vf_withParams_rev, PUR, PDR, GammaUR, GammaDR, ruUR, rsDR, 1., _pMapDivCount );
     }
     else
     {
-      leftMap = new midPoincareMap( Fhn_vf, Fhn_vf_rev, PDL, PUL, GammaDL, GammaUL, ruDL, rsUL, -1., _pMapDivCount );
-      rightMap = new midPoincareMap( Fhn_vf, Fhn_vf_rev, PUR, PDR, GammaUR, GammaDR, ruUR, rsDR, 1., _pMapDivCount );
+      leftMap = new midPoincareMap( *Fhn_vf, *Fhn_vf_rev, PDL, PUL, GammaDL, GammaUL, ruDL, rsUL, -1., _pMapDivCount );
+      rightMap = new midPoincareMap( *Fhn_vf, *Fhn_vf_rev, PUR, PDR, GammaUR, GammaDR, ruUR, rsDR, 1., _pMapDivCount );
     }
 
     IVector setToIntegrateDL(2);
@@ -105,9 +105,9 @@ void FhnVerifyExistenceOfPeriodicOrbit( interval _theta, interval _eps, bool _ve
     IVector ULface( rsUL*interval(-1,1), setToBackIntegrateUL[1], 0. ); 
     IVector DLface( setToIntegrateDL[0], ruDL*interval(-1,1), 0. ); 
 
-    FhnIsolatingSegment ULSegment( Fhn_vf, GammaUL + IVector( 0., 0., setToBackIntegrateUL[0].leftBound() ), 
+    FhnIsolatingSegment ULSegment( *Fhn_vf, GammaUL + IVector( 0., 0., setToBackIntegrateUL[0].leftBound() ), 
         GammaUL + IVector( 0., 0., setToBackIntegrateUL[0].rightBound() ), PUL, ULface, ULface, _cornerSegmentDivCount ); 
-    FhnIsolatingSegment DLSegment( Fhn_vf, GammaDL + IVector( 0., 0., setToIntegrateDL[1].leftBound() ), 
+    FhnIsolatingSegment DLSegment( *Fhn_vf, GammaDL + IVector( 0., 0., setToIntegrateDL[1].leftBound() ), 
       GammaDL + IVector( 0., 0., setToIntegrateDL[1].rightBound() ), PDL, DLface, DLface, _cornerSegmentDivCount );  
 
     IVector ULSegment_entranceVerification( ULSegment.entranceVerification() );
@@ -145,9 +145,9 @@ void FhnVerifyExistenceOfPeriodicOrbit( interval _theta, interval _eps, bool _ve
     IVector URface( setToIntegrateUR[0], ruUR*interval(-1,1), 0. );
     IVector DRface( rsDR*interval(-1,1), setToBackIntegrateDR[1], 0. ); 
  
-    FhnIsolatingSegment URSegment( Fhn_vf, GammaUR + IVector( 0., 0., setToIntegrateUR[1].leftBound() ), 
+    FhnIsolatingSegment URSegment( *Fhn_vf, GammaUR + IVector( 0., 0., setToIntegrateUR[1].leftBound() ), 
         GammaUR + IVector( 0.,0.,setToIntegrateUR[1].rightBound() ), PUR, URface, URface, _cornerSegmentDivCount );  
-    FhnIsolatingSegment DRSegment( Fhn_vf, GammaDR + IVector( 0., 0., setToBackIntegrateDR[0].leftBound() ), 
+    FhnIsolatingSegment DRSegment( *Fhn_vf, GammaDR + IVector( 0., 0., setToBackIntegrateDR[0].leftBound() ), 
         GammaDR + IVector( 0., 0., setToBackIntegrateDR[0].rightBound() ), PDR, DRface, DRface, _cornerSegmentDivCount );  
  
 
@@ -188,8 +188,8 @@ void FhnVerifyExistenceOfPeriodicOrbit( interval _theta, interval _eps, bool _ve
 
     // up down isolating segments
 
-    chainOfSegments UpSegment( Fhn_vf, ULSegment.GammaRight, URSegment.GammaLeft, PUL, PUR, ULface, URface, _chainSegmentDivCount );
-    chainOfSegments DownSegment( Fhn_vf, DLSegment.GammaRight, DRSegment.GammaLeft, PDL, PDR, DLface, DRface, _chainSegmentDivCount ); 
+    chainOfSegments UpSegment( *Fhn_vf, ULSegment.GammaRight, URSegment.GammaLeft, PUL, PUR, ULface, URface, _chainSegmentDivCount );
+    chainOfSegments DownSegment( *Fhn_vf, DLSegment.GammaRight, DRSegment.GammaLeft, PDL, PDR, DLface, DRface, _chainSegmentDivCount ); 
 
     if( !( ULSegment.segmentEnclosure[0] > ULSegment.segmentEnclosure[2] ) )
       throw "MISALIGNMENT OF ONE OF THE UPPER SEGMENTS! \n";
