@@ -23,10 +23,11 @@ const double accuracy = 1e-12;           // accuracy for nonrigorous numerics (i
 const int order = 18;                    // order for all the Taylor integrators (high is fast)
 
 #include "numerics.hpp"   // Warning! When changing the vector field, one needs to make manual changes in this header file (class FhnBifurcation)!
-#include "poincare.hpp"
+#include "auxiliaries.hpp"
 #include "segments.hpp"
+#include "poincare.hpp"
 #include "proof.hpp"
-
+#include "homoclinic_proof.hpp"
 
 // ---------------------------------------------------------------------------------
 // ----------------------------------- MAIN ----------------------------------------
@@ -51,9 +52,31 @@ int main(){
   time (&start1);
   cout.precision(15);
 
+  // A PROOF FOR THE HOMOCLINIC ORBIT
+
+  interval thetaGuess = interval(111.)/100.;   // we only try to prove the fast wave, the slow one does not come from the singular perturbation [KSS]
+  bool verbose = 1; 
+  bool with_params = 0; // allowing parameters to evolve as variables with velocity 0 does not improve significantly the results
+ 
+  interval eps = interval(0.,4.)/1e6;  
+  FhnVerifyExistenceOfHomoclinicOrbit( thetaGuess, eps, verbose, with_params );
+
+  eps = interval(4.,6.)/1e6;  
+  FhnVerifyExistenceOfHomoclinicOrbit( thetaGuess, eps, verbose, with_params );
+ 
+  eps = interval(6.,10.)/1e6;  
+  FhnVerifyExistenceOfHomoclinicOrbit( thetaGuess, eps, verbose, with_params );
+ 
+  time (&end1);
+  double dif1 = difftime( end1, start1 );
+  cout << "Elapsed time for the proof is " << dif1 << " seconds. \n";
+
+
+/*
+  // THE PERIODIC ORBIT PROOF FROM THE FIRST PAPER
   interval theta = interval(61.)/100.;  
   interval eps = interval(0.,1.)/1e4;  
-  bool verbose = 0; 
+  bool verbose = 1; 
   bool with_params = 0; // allowing parameters to evolve as variables with velocity 0 does not improve significantly the results
   
   FhnVerifyExistenceOfPeriodicOrbit( theta, eps, verbose, with_params );
@@ -71,7 +94,7 @@ int main(){
   time (&end2);
   double dif2 = difftime( end2, start2 );
   cout << "Elapsed time for the proof for parameter range eps = " << eps << " is " << dif2 << " seconds. \n";
-
+*/
  /* 
   eps = interval(1.5,2.)/1e4;  
   FhnVerifyExistenceOfPeriodicOrbit( theta, eps, verbose, with_params );

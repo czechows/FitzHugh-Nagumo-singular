@@ -2,7 +2,7 @@
 /* -----------------------------------------------------------------------------------------
  * This is a header file to fhn.cpp providing numerical simulations necessary
  * for the computer assistance of proofs of periodic orbits in the FitzHugh-Nagumo system.
- * We find values of v for which there exist heteroclinic connections between equilibria
+ * We find values of v,theta for which there exist heteroclinic connections between equilibria
  * in the fast subsystem via shooting from stable/unstable manifolds of equilibria
  * to the Poincare section given in between.
  * The validity of the proofs does not depend on validity of numerics given below.
@@ -29,8 +29,11 @@ public:
   DAffineSection section;
   DPoincareMap pm;
   DPoincareMap pmRev;     // reversed Poincare map for backward integration
-  bool dir;               // direction - do we go from EqU to EqD or other way round?
-  FhnBifurcation (int order, double& _theta, const DVector& _EqU, const DVector& _EqD, double _DISP, bool _dir = 1) 
+  bool dir;               // direction - do we go from EqU to EqD or other way round
+  bool homoclinic;        // 1 if we look for theta instead of v for the homoclinic connection
+  double homTheta;           // used only for the homoclinic case
+
+  FhnBifurcation (int order, double& _theta, const DVector& _EqU, const DVector& _EqD, double _DISP, bool _dir = 1, bool _homoclinic=0) 
     : vectorField("par:theta,v;var:u,w;fun:w,(2/10)*(theta*w+u*(u-1)*(u-(1/10))+v);"), // vector field is u'=w, w'=0.2*(theta*w +u*(u-1)*(u-0.1)+v, v is parameter
       vectorFieldRev("par:theta,v;var:u,w;fun:-w,(-2/10)*(theta*w+u*(u-1)*(u-(1/10))+v);"), //  minus vector field for reverse integration
       solver(vectorField,order),
@@ -41,7 +44,9 @@ public:
       section( DVector({0.2, 0. }), DVector({-1.,0.})), // an arbitrary choice of coordinate section here
       pm(solver,section),
       pmRev(solverRev,section),
-      dir(_dir)
+      dir(_dir),
+      homoclinic(_homoclinic),
+      homTheta(_theta)
   {
     vectorField.setParameter("theta",_theta);
     vectorFieldRev.setParameter("theta",_theta);
@@ -72,7 +77,7 @@ public:
     return( vectorField[Eq] );
   }
 
-  double w_function(DVector guessEqU, DVector guessEqD, double v)  // returns distance in w variable on the v-poincare section between integrated displacement in unstable direction from EqU
+  double w_function(DVector guessEqU, DVector guessEqD, double v)  // returns distance in w variable on the Poincare section between integrated displacement in unstable direction from EqU
                                                                    // and integrated displacement in stable direction from EqD if dir = 1 or vice-versa elsewise
   {
     double return_time = 1.;
@@ -124,12 +129,12 @@ public:
     double v0 = v + 1e-4;
     double v1 = v;
     double v_temp = v;
-
+ 
     DVector EqU0 = Eq_correct(EqU, v0);
     DVector EqU1 = Eq_correct(EqU, v1);
     DVector EqD0 = Eq_correct(EqD, v0);
     DVector EqD1 = Eq_correct(EqD, v1);
-
+ 
    while(error > accuracy)
    {
     v_temp = v1;
@@ -147,6 +152,65 @@ public:
    EqD = EqD1;
     
    return v1;
+  }
+
+  double theta_correct() // corrects homTheta to one for which a heteroclinic connection between (0,0) and an equilibrium on the upper branch of the slow manifold exists
+                         // as a side effect corrects EqD to (0,0) and EqU to a correct position on the equilibrium upper branch, returns homTheta
+                         // all happens for v=0 (one needs manual readjustments if that happened for other v's)
+  {
+    if( !homoclinic )
+      throw "Homoclinic option needs to be enabled";
+
+    double error = 1.;
+
+    double theta0 = homTheta + 1e-4;
+    double theta1 = homTheta;
+    double theta_temp = theta1;
+
+    vectorField.setParameter("theta",theta0); 
+    DVector EqU0 = Eq_correct(EqU, 0.);  
+    DVector EqD0 = Eq_correct(EqD, 0.);  
+
+    vectorField.setParameter("theta",theta1);
+    DVector EqU1 = Eq_correct(EqU, 0.);  
+    DVector EqD1 = Eq_correct(EqD, 0.);  
+
+
+    while(error > accuracy)
+    {
+      theta_temp = theta1;
+
+      vectorField.setParameter("theta",theta0);
+      vectorFieldRev.setParameter("theta",theta0);
+      EqU0 = Eq_correct(EqU, 0.);  
+      double w0 = w_function( EqU0, EqD0, 0. );
+
+      vectorField.setParameter("theta",theta1);
+      vectorFieldRev.setParameter("theta",theta1);
+      EqU1 = Eq_correct(EqU, 0.);  
+      double w1 = w_function( EqU1, EqD1, 0. );
+
+      theta1 = theta1 - w1*( ( theta1 - theta0 ) / ( w1 - w0 ) );
+ 
+      vectorField.setParameter("theta",theta_temp);
+      EqU0 = Eq_correct(EqU0, 0.);  
+      EqD0 = Eq_correct(EqD0, 0.);  
+ 
+      vectorField.setParameter("theta",theta1);
+      EqU1 = Eq_correct(EqU1, 0.);  
+      EqD1 = Eq_correct(EqD1, 0.);  
+
+      theta0 = theta_temp;
+
+      vectorField.setParameter("theta",theta1);
+      error = abs( w_function(EqU1, EqD1, 0.) );
+    }
+
+    EqU = EqU1;
+    EqD = EqD1;   // again, we know that this is (0,0) but we recompute numerically so code will work for other systems with non-explicit stationary points
+    homTheta = theta1;
+
+    return theta1;
   }
 };
 
@@ -181,6 +245,7 @@ void GammaQuad_correct( const interval& _theta, IVector& _GammaUL, IVector& _Gam
   double vR_c( BifR.v_correct(vR) );        // corrected v values & equlibria coordinates
   double vL_c( BifL.v_correct(vL) );
 
+
   DVector EqUL_c( BifL.EqU ),
           EqUR_c( BifR.EqU ),
           EqDR_c( BifR.EqD ), 
@@ -201,4 +266,38 @@ void GammaQuad_correct( const interval& _theta, IVector& _GammaUL, IVector& _Gam
   _GammaUL[2] = _GammaDL[2] = vL_c;
   _GammaUR[2] = _GammaDR[2] = vR_c;
 }
+
+void GammaHom_correct( interval& _theta, IVector& _GammaUL, IVector& _GammaDL, IVector& _GammaUR, IVector& _GammaDR ) // corrects original guesses of Gammas for given theta, updates theta
+{
+  double theta( _theta.leftBound() );
+  double DISP(1e-5);
+
+
+  DVector EqUL(2),
+          EqDL(2);      // equilibria are first two coordinates of each Gamma, they will be corrected by Newton inside the program
+
+  EqUL[0] = _GammaUL[0].leftBound();
+  EqUL[1] = _GammaUL[1].leftBound();
+ 
+  EqDL[0] = _GammaDL[0].leftBound();
+  EqDL[1] = _GammaDL[1].leftBound();
+
+  FhnBifurcation BifHom(order, theta, EqUL, EqDL, DISP, 0, 1); // the homoclinic option on, dir = 0
+  _theta = interval( BifHom.theta_correct() );
+
+
+  DVector EqUL_c( BifHom.EqU ),
+          EqDL_c( BifHom.EqD );
+ 
+  _GammaUL[0] = EqUL_c[0];                  // assignment back to Gammas
+  _GammaUL[1] = EqUL_c[1];
+  _GammaUL[2] = 0.;
+
+  _GammaDL[0] = EqDL_c[0];
+  _GammaDL[1] = EqDL_c[1];
+  _GammaDL[2] = 0.;
+
+  GammaQuad_correct( _theta, _GammaUL, _GammaDL, _GammaUR, _GammaDR );  // only to fix GammaUR and GammaDR now
+}
+
 

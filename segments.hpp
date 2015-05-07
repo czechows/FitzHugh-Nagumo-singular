@@ -1,4 +1,3 @@
-
 /* -----------------------------------------------------------------------------------------
  * This is a header file to fhn.cpp providing classes for isolating segments: FhnIsolatingSegment,
  * which is used when a constructed segment is short and one can stick with one affine coordinate change
@@ -66,9 +65,7 @@ IMatrix coordChange( IMap vectorField, const IVector& Gamma ) // matrix of coord
   }
 
 
-
-
-  // next two lines depend on dimension and mean that we are only changing coordinates for the fast variables (2x2 matrix), slow remain unchanged (are treated as a parameter)
+  // next two lines depend on the dimension and mean that we are only changing coordinates for the fast variables (2x2 matrix), slow remain unchanged (are treated as a parameter)
   // here we explicitly assume vdim = 3 and last variable is slow!
   P_result[0][2] = P_result[1][2] = P_result[2][0] = P_result[2][1] = 0.;
   P_result[2][2] = -1.;      // -1 because we add a minus in return
@@ -76,7 +73,6 @@ IMatrix coordChange( IMap vectorField, const IVector& Gamma ) // matrix of coord
   return -IMatrix(P_result); // minus eigenvectors are also eigenvectors and such transformed matrix suits better our computations - one could also put minuses
                             // into displacements of sections and sets to integrate from slow manifolds
 };
-
 
 
 /* ----------------------------------------------------------------------------------------- */
@@ -96,8 +92,10 @@ public:
   IMatrix InvP;                           // P^(-1)
   DiscreteDynSys<IMap> vectorFieldEval;   // this is only to evaluate the vector field on C0Rect2Set in most effective way - not a real dynamical system
   IVector segmentEnclosure;               // whether we are moving to the right or to the left on the slow variable     
+  bool isABlock;
 
-  FhnIsolatingSegment( IMap _vectorField, const IVector& _GammaLeft, const IVector& _GammaRight, const IMatrix& _P, const IVector& _leftFace, const IVector& _rightFace, interval _div )
+  FhnIsolatingSegment( IMap _vectorField, const IVector& _GammaLeft, const IVector& _GammaRight, const IMatrix& _P, const IVector& _leftFace, const IVector& _rightFace, interval _div,
+      bool _isABlock = 0 )
     : vectorField(_vectorField), 
       P(_P),
       GammaLeft(_GammaLeft),
@@ -107,11 +105,16 @@ public:
       div(_div),
       InvP(inverseMatrix(P)),
       vectorFieldEval(vectorField),
-      segmentEnclosure( intervalHull( GammaLeft + P*leftFace, GammaRight + P*rightFace ) ) // a rough enclosure for the isolating segment to check whether
+      segmentEnclosure( intervalHull( GammaLeft + P*leftFace, GammaRight + P*rightFace ) ), // a rough enclosure for the isolating segment to check whether
                                                                                            // slow vector field is moving in one direction only
+      isABlock( _isABlock )
   {
-    if( !intersectionIsEmpty( IVector( {segmentEnclosure[0]} ), IVector( {segmentEnclosure[2]} ) ) )   // check whether slow vector field goes in one direction, assumes nonlinearity
-      throw "ZERO OF THE SLOW SUBSYSTEM DETECTED IN ONE OF THE SEGMENTS! \n";       // is const*(u-v), const>0
+    // check whether the slow vector field goes in one direction, assumes the nonlinearity is const*(u-v), const>0
+    if( !isABlock )
+    {
+      if( !intersectionIsEmpty( IVector( {segmentEnclosure[0]} ), IVector( {segmentEnclosure[2]} ) ) )
+        throw "ZERO OF THE SLOW SUBSYSTEM DETECTED IN ONE OF THE SEGMENTS! \n";       
+    }
   }
 
 
@@ -284,26 +287,7 @@ public:
   {
   }
   
-  IVector Eq_correct(IVector& guess)              // corrects initial guesses of u so they are closer to real equilibria using Newton alg., w is always 0, computes on 
-                                                  // intervals to avoid code repetition - but is not rigorous (! this is not an interval Newton operator !)
-  {
-    interval error(1.);
-    interval result(guess[0]);
-    interval oldresult(result);
-    while(error > accuracy)
-    {
-      oldresult = result;
-      result = result - (vectorField( IVector(result, 0., guess[2]) )[1])/(vectorField[ IVector(result, 0., guess[2]) ][1][0]);  
-                                                                          // Newton algorithm to calculate zeroes of the vector field - w is always 0.,
-                                                                          // derivative is of the second equation with respect to first variable - u
-      error = abs(oldresult - result);
-    }
-    IVector new_Eq(3);
-    new_Eq[0] = result;
-    new_Eq[1] = interval(0.);
-    new_Eq[2] = guess[2];
-    return new_Eq;
-  }
+
   
   IVector entranceAndExitVerification(int N_Segments) // first two coordinates are hulls of normalSLxVectorField, normalSRxVectorField, then normalULxVectorField and normalURxVectorField
     // exit and entrance verification are done together here to speed up calculations, reduce amount of code and memory used, etc.
@@ -333,7 +317,7 @@ public:
      {
       interval ti1( double(i)/double(N_Segments) );
       Gamma_i1 = ( GammaRight - GammaLeft )*ti1 + GammaLeft;
-      Gamma_i1 = Eq_correct( Gamma_i1 ); // we correct linear approx. of a slow manifold point by Newtons method
+      Gamma_i1 = Eq_correct( vectorField, Gamma_i1 ); // we correct linear approx. of a slow manifold point by Newtons method
 
       // we widen the faces by linearly extending/contracting width and length from leftFace to rightFace sizes
       Face_i1[0] = interval( ( ( rightFace[0].leftBound() - leftFace[0].leftBound() )*ti1 + leftFace[0].leftBound() ).leftBound(), 
@@ -349,7 +333,13 @@ public:
       if( !isCovering( Face_i0, inverseMatrix(P_i1)*P_i0, Face_i0_adj ) )            // checking whether Face_i0 covers Face_i0_adj by matrix P_i1^(-1)*P_i0 (so changing coordinates
                                                                                      // from P_i0 to P_i1)
                                                                                      // this will happen if our partition into subsegments is fine enough
-         throw "NO COVERING BETWEEN SUBSEGMENTS! \n";
+      {
+        cout << "ERROR AT i= " << i << "\n";
+        cout << "Face_i0 = " << Face_i0 << "\n";
+        cout << "inverseMatrix(P_i1)*P_i0: " << inverseMatrix(P_i1)*P_i0 << "\n";
+        cout << "Face_i0_adj: " << Face_i0_adj << "\n"; 
+         throw "NO COVERING BETWEEN SUBSEGMENTS ! \n";
+      }
      }
      else
      {
@@ -376,13 +366,13 @@ public:
      }
 
      // UNCOMMENT FOR THROWING ISOLATION EXCEPTIONS ON THE RUN TO BREAK FROM PROGRAM FASTER - NOT NECESSARY FOR THE PROOF BUT SAVES TIME
- /*    if( vectalg::containsZero( IVector( {intervalHull( NormalSLxVectorFieldHull, NormalSRxVectorFieldHull )} ) ) )
+     if( vectalg::containsZero( IVector( {intervalHull( NormalSLxVectorFieldHull, NormalSRxVectorFieldHull )} ) ) )
        throw "ISOLATION ERROR FOR ONE OF THE REGULAR ISOLATING SEGMENTS! \n" ; 
 
      if( vectalg::containsZero( IVector( {intervalHull( NormalULxVectorFieldHull, NormalURxVectorFieldHull )} ) ) )
        throw "ISOLATION ERROR FOR ONE OF THE REGULAR ISOLATING SEGMENTS! \n" ; 
      
-*/
+
      Gamma_i0 = Gamma_i1;  // we move to the next subsegment
      Face_i0 = Face_i1;
      P_i0 = P_i1;
@@ -396,3 +386,19 @@ public:
 };
 
 
+class FhnIsolatingBlock : public FhnIsolatingSegment
+{
+public:
+  FhnIsolatingBlock( IMap _vectorField, const IVector& _GammaLeft, const IVector& _GammaRight, const IMatrix& _P, const IVector& _leftFace, const IVector& _rightFace, interval _div )
+  : FhnIsolatingSegment( _vectorField, _GammaLeft, _GammaRight, _P, _leftFace, _rightFace, _div, 1 ) // it is a block so we don't check whether VF is uniform in one direction
+  {
+    // to obtain isolation we check u>v on the left slow face and u<v on the right slow face, ONLY FOR THE FITZHUGH-NAGUMO VECTOR FIELD!
+    if( !( ( GammaRight + P*rightFace )[0] < GammaRight[2] && ( GammaLeft + P*leftFace )[0] > GammaLeft[2] ) )  
+    {
+    //  cout << "GAMMARIGHT[0]: " << ( GammaRight + P*rightFace )[0] << "\n";
+    //  cout << "GAMMARIGHT[2]: " << GammaRight[2]  << "\n";
+
+      throw "No isolation in the slow direction for the isolating block! \n";
+    }
+  }
+};

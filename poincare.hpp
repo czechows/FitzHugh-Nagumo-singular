@@ -1,200 +1,83 @@
-
 /* -----------------------------------------------------------------------------------------
- * This is a header file to fhn.cpp providing Poincare map classes for the Poincare maps
+ * This is a header file to fhn.cpp providing Poincare map class for the Poincare maps
  * between branches of the slow manifold and auxiliaries for rigorous verification of
  * 2-dim covering relations.
  * ----------------------------------------------------------------------------------------*/
-
-
-/* ----------------------------------------------------------------------------------------- */
-/* ---------------------------- COVERING RELATIONS ----------------------------------------- */
-/* ----------------------------------------------------------------------------------------- */
-
-// left right stable unstable edges for covering - use with 2dim vectors with first variable stable second unstable, can have more dimensions of neutral variables
-
-IVector leftU(const IVector &N)
-{
-  IVector _leftU( N.dimension() ); 
-  _leftU = N;
-  _leftU[1] =  N[1].leftBound();
-  return _leftU;
-}
-
-IVector rightU(const IVector &N)
-{
-  IVector _rightU( N.dimension() );
-  _rightU = N;
-  _rightU[1] =  N[1].rightBound();
-  return _rightU;
-}
-
-IVector leftS(const IVector &N)
-{
-  IVector _leftS( N.dimension() ); 
-  _leftS = N;
-  _leftS[0] =  N[0].leftBound();
-  return _leftS;
-}
-
-IVector rightS(const IVector &N)
-{
-  IVector _rightS( N.dimension() );
-  _rightS = N;
-  _rightS[0] =  N[0].rightBound();
-  return _rightS;
-}
-
-bool isCovering( const IVector& setCovering, const IMatrix& setCoveringCoord, const IVector& setToCover ) 
-                                                      // verifies covering between image of setCovering by a matrix setCoveringCoord over setToCover 
-                                                      // first variable stable second unstable
-{
- bool leftCheck( (setCoveringCoord*( leftU(setCovering) ))[1] < setToCover[1].leftBound() );
- bool rightCheck( (setCoveringCoord*( rightU(setCovering) ))[1] > setToCover[1].rightBound() );
-
- if( leftCheck && rightCheck && subsetInterior( (setCoveringCoord*setCovering)[0], setToCover[0] ) ) 
-  return 1;
- else
-   return 0;
-};
-
-
-
-IVector shrinkAndExpand(const IVector &N, interval factor)  // shrinks a rectangle in unstable direction and expands it in stable to get a covering (for example by original rectangle)
-{
-    IVector result(N);
-    result[0] = N[0]*factor;
-    result[1] = N[1]/factor;
-    return result;
-}
-
-void orthogonalizeRelativeColumn( IMatrix& matrixToOrthogonalize, unsigned int columnNo )
-{
-  for( unsigned int i = 0; i <= matrixToOrthogonalize.numberOfColumns() - 1; i++ ) 
-  { 
-    IVector vectorInvariant( matrixToOrthogonalize.column( columnNo ) );
-    if( i != columnNo )
-    {
-      IVector vectorToOrthogonalize( matrixToOrthogonalize.column(i) );
-      vectorToOrthogonalize = leftVector( midVector( vectorToOrthogonalize ) );
-      IVector projection = ( scalarProduct( vectorToOrthogonalize, vectorInvariant )/scalarProduct( vectorInvariant, vectorInvariant ) ) * vectorInvariant;
-
-      for( unsigned int j = 1; j <= matrixToOrthogonalize.numberOfRows(); j++ )
-      {
-        matrixToOrthogonalize(j,i+1) = vectorToOrthogonalize(j) - projection(j);
-      }
-    }
-  }
-}
 
 
 /* ------------------------------------------------------------------------------------ */
 /* ---------------------------- POINCARE MAPS ----------------------------------------- */
 /* ------------------------------------------------------------------------------------ */
 
-class FhnPoincareMap // this class was originally used to integrate from section near one corner point to section near another. However, this functionality was removed,
+class FhnPoincareMap 
+                       // this class was originally used to integrate from section near one corner point to section near another. However, this functionality was removed,
                     // and now it only serves as a base class for midPoincareMap which integrates a section midway between the corner points
 {
 public:
   int dim;          // phase space dimension
   IMap vectorField;
   ITaylor solver;
-  IVector y2vector;
-  IVector section2CenterVector;
-  IAffineSection section2;
-  IVector y1vector;
-  IVector section1CenterVector;
-  IPoincareMap pm;
+
   IMatrix P1;
   IMatrix P2;
+ 
+  IVector GammaLeft1;
+  IVector GammaRight1;
+  IVector GammaLeft2;
+  IVector GammaRight2;
+  IVector GammaCenter1;
+  IVector GammaCenter2;
+
+  IVector y1vector;
+  IVector section1CenterVector;
+  IVector y2vector;
+  IVector section2CenterVector;
+
   int div;         // number of subdivisions in each dimension (supports two, does not support subdivisions in parameter space) for integration of h-sets
   IVector params;   // vector of parameters
-  IVector GammaU1;
-  IVector GammaU2;
 
-  FhnPoincareMap( IMap _vectorField, const IMatrix& _P1, const IMatrix& _P2, const IVector& _GammaU1, const IVector& _GammaU2, 
-                                                                                        interval& _ru1, interval& _rs2, interval dir = interval(1.), int _div=1 ) 
+
+  FhnPoincareMap( IMap _vectorField, const FhnIsolatingSegment _segment1, const FhnIsolatingSegment _segment2, interval dir = interval(1.), int _div=1 ) 
     : dim( 3 ),
-      vectorField( _vectorField ),                               // a 3d vector field
+      vectorField( _vectorField ),                               // a 3d vector field, needs to have a parameter named "theta"
       solver( vectorField, order ),
-      y2vector( dir*_rs2 , 0., 0. ),                             // a section center given in linearization around slow manifold coordinates (normal is (-rs2,0,0))
-      section2CenterVector( _P2*y2vector + _GammaU2 ),
-      section2( section2CenterVector, Transpose(inverseMatrix(_P2))*y2vector ),      // a section moved to uwv space normal is _P2^(-T)*(-y2vector)
-  
-      y1vector( 0., -dir*_ru1, 0. ),                              // same for y1vector, the center of the set to integrate
-      section1CenterVector( _P1*y1vector + _GammaU1 ),
 
-      pm( solver, section2 ),
-      P1( _P1 ),
-      P2( _P2 ),
+      P1( _segment1.P ),
+      P2( _segment2.P ),
+
+      GammaLeft1( _segment1.GammaLeft ),
+      GammaRight1( _segment1.GammaRight ),
+      GammaLeft2( _segment2.GammaLeft ),
+      GammaRight2( _segment2.GammaRight ),
+
+      GammaCenter1( GammaLeft1/2. + GammaRight1/2. ),            // these are only for 'nonrigorous' numerics now, i.e. finding the mid section
+      GammaCenter2( GammaLeft2/2. + GammaRight2/2. ),            // we always choose the segments so the center vector is one of the corner points
+
+      y1vector( 0., -dir*_segment1.rightFace[1].rightBound(), 0. ),                              
+      section1CenterVector( P1*y1vector + GammaCenter1 ),
+
+      y2vector( dir*_segment2.rightFace[0].rightBound(), 0., 0. ),                             
+      section2CenterVector( P2*y2vector + GammaCenter2 ),
+
       div( _div ),
-      params( 1 ),
-      GammaU1( _GammaU1 ),
-      GammaU2( _GammaU2 )
+      params( 1 ) 
   {
+    if( !(_segment1.leftFace == _segment1.rightFace && _segment2.leftFace == _segment2.rightFace) )
+      throw "Poincare maps only implemented for segments with leftFace == rightFace \n";
+    
+    if( !(dir == interval(1.)) && !(dir == interval(-1.)) )
+      throw "dir must be plus minus 1";
+
+    if( !(_segment1.leftFace == -_segment1.leftFace && _segment2.leftFace == -_segment2.leftFace) )
+      throw "Only segments with faces symmetric with respect to 0 allowed \n";
   }
 
-  FhnPoincareMap( IVector _params, IMap _vectorFieldWithParams, const IMatrix& _P1, const IMatrix& _P2, const IVector& _GammaU1, const IVector& _GammaU2, 
-                                                                                        interval& _ru1, interval& _rs2, interval dir = interval(1.), int _div=1 ) 
-    : dim( 3 + _params.dimension() ),
-      vectorField( _vectorFieldWithParams ),                               
-      solver( vectorField, order ),
-      y2vector( dim ),                             
-      section2CenterVector( dim ),
-      section2( IVector(dim), IVector(dim) ),      // uninitialized section
-      y1vector( dim ),                              
-      section1CenterVector( dim ),
-      pm ( solver, section2 ),
-      P1( dim, dim ),
-      P2( dim, dim ),
-      div( _div ),
-      params( _params ),
-      GammaU1( dim ),
-      GammaU2( dim )
-  {
-    y1vector = IVector( dim );
-    y1vector.clear();                 // ensures vector is all zeroes
-    y1vector[1] = -dir*_ru1;
 
-    y2vector = IVector( dim );
-    y2vector.clear();
-    y2vector[0] = dir*_rs2;
-
-    for( int i=0; i < dim; i++ )
-    {
-      if( i < 3 )
-      {
-        GammaU1[i] = _GammaU1[i];
-        GammaU2[i] = _GammaU2[i];
-      }
-      else
-      {
-        GammaU1[i] = params[i-3];     // we embed the parameters
-        GammaU2[i] = params[i-3]; 
-      }
-
-      for( int j=0; j < dim; j++ )
-      {
-        if( j < 3 && i < 3 )
-        {
-          P1(i+1,j+1) = _P1(i+1,j+1);               // indexing of matrices is shifted by 1 (starts from 1, not 0)
-          P2(i+1,j+1) = _P2(i+1,j+1);
-        }
-        else if( i == j )
-          P1(i+1,j+1) = P2(i+1,j+1) = 1.;
-        else
-          P1(i+1,j+1) = P2(i+1,j+1) = 0.;
-      }
-    }
-
-    section1CenterVector = IVector( P1*y1vector + GammaU1 );
-    section2CenterVector = IVector( P2*y2vector + GammaU2 );
-
-    section2.setOrigin( section2CenterVector );
-    section2.setNormalVector( Transpose(inverseMatrix(P2)).column(1) );         // solver works by reference so gets autoupdated
-                                                                               // normal vector is one of the rows of inverseMatrix(P2), that matches
-                                                                               // with transforming the result of Poincare map by inverseMatrix(P2)
-  }
+ // #include "todo/fhnPMwithparams.hpp"
 };
+
+
+
 
 
 /* this is a derived class, which allows to integrate forward from one branch of the slow manifold and backward from the other
@@ -213,27 +96,50 @@ public:
   IMatrix midP;
   IAffineSection midSection;
   IMap vectorFieldRev;
+  interval thetaRange; // has to be same as theta for the vector field (there is no .getParameter!)
+  interval epsRange; // same as thetaRange
   
-  midPoincareMap( IMap _vectorField, IMap _vectorFieldRev, const IMatrix& _P1, const IMatrix& _P2, const IVector& _GammaU1, const IVector& _GammaU2, 
-                                                                                        interval& _ru1, interval& _rs2, interval dir = interval(1.), int _div=1 ) 
-  : FhnPoincareMap( _vectorField, _P1, _P2, _GammaU1, _GammaU2, _ru1, _rs2, dir, _div ),
+  midPoincareMap( IMap _vectorField, IMap _vectorFieldRev, const FhnIsolatingSegment _segment1, const FhnIsolatingSegment _segment2, interval _thetaRange, interval _epsRange, 
+      interval dir = interval(1.), int _div=1 ) 
+  : FhnPoincareMap( _vectorField, _segment1, _segment2, dir, _div ),
     midCenterVector( dim ),
     midP( dim, dim ),
     midSection( midCenterVector, midCenterVector ),
-    vectorFieldRev( _vectorFieldRev )
+    vectorFieldRev( _vectorFieldRev ),
+    thetaRange( _thetaRange ),
+    epsRange( _epsRange )
   {
-    ICoordinateSection tempSection( dim, 0, ( (80./100.)*_GammaU1[0] + (20./100.)*_GammaU2[0] ) ); 
+    ICoordinateSection tempSection( dim, 0, ( (80./100.)*GammaCenter1[0] + (20./100.)*GammaCenter2[0] ) );  
+
+    if( _segment1.isABlock ) // a check on whether we do a homoclinic orbit proof
+    {
+      tempSection.setConstant( (20./100.)*GammaCenter1[0] + (80./100.)*GammaCenter2[0] );
+    }
+
+    interval midThetaRange( thetaRange.leftBound()/2. + thetaRange.rightBound()/2. );
+    interval midEpsRange( epsRange.leftBound()/2. + epsRange.rightBound()/2. );
+
+    vectorField.setParameter("theta", midThetaRange ); // in what is in this block we need only approximately good variables
+    vectorField.setParameter("eps", midEpsRange );
 
     ITaylor tempSolver( vectorField, order );
     IPoincareMap tempPM( tempSolver, tempSection );
-
+    
     interval returnTime;
-    C0HOTripletonSet C0TempCenterSet( section1CenterVector );
+    IMatrix tempMonodromyMatrix( dim, dim );
+    C1Rect2Set tempCenterSet( section1CenterVector );
 
-    midCenterVector = tempPM( C0TempCenterSet, returnTime );
+    midCenterVector = tempPM( tempCenterSet, tempMonodromyMatrix, returnTime );
     midSection.setOrigin( midVector(midCenterVector) );
 
     IVector normalVector( leftVector( midVector(vectorField( midCenterVector )) ) );
+    
+    IEuclNorm vectorNorm;
+
+    // here some changes! (for old version see with params construction). they dont work that great. improving frontcovering worsens backcovering & vice versa
+   // IVector initialNormal = Transpose(inverseMatrix(P2)).column(0);
+  //  IVector normalVector( leftVector( midVector( Transpose( inverseMatrix( tempMonodromyMatrix ) )*initialNormal ) ) ); // THAT IS NEW! (SEE ROBERTS NOTES!)
+
     midSection.setNormalVector( normalVector );
 
     // some objects here (solver, returntime) could have been reused but for safety we create new ones
@@ -253,6 +159,7 @@ public:
     IPoincareMap tempPM2Rev( tempSolver2Rev, midSection );
 
     IVector tempVect = tempPM2( C1TempCenterSet, monodromyMatrix, returnTime2 );
+
     IVector tempVectRev = tempPM2Rev( C1TempCenterSetRev, monodromyMatrixRev, returnTime2Rev );
 
     IVector stableDir = ( tempPM2Rev.computeDP( tempVectRev, monodromyMatrixRev, returnTime2Rev ) )*P2.column(2);
@@ -260,10 +167,9 @@ public:
                                                                                      // new coordinates are variational equations eval. at identity matrix times original matrix P1
                                                                                      // we cannot eval variational equations at P1 because CAPD doesn't support that yet 
                                                                                      // variational equation is linear though so that is ok
-    IEuclNorm vectorNorm;
 
-    stableDir = stableDir / vectorNorm( stableDir );
-    unstableDir = unstableDir / vectorNorm( unstableDir );
+    stableDir = leftVector( midVector( stableDir / vectorNorm( stableDir ) ) );
+    unstableDir = leftVector( midVector ( unstableDir / vectorNorm( unstableDir ) ) );
 
     for( int i = 1; i <= dim; i++ )
     {
@@ -271,83 +177,19 @@ public:
                                           // as this was the unstable row of P1 in direction of which we integrated
                                           // so before the insertion this column was ~0. This should make the matrix nonsingular.
       midP(i,1) = stableDir(i);
-      midP(i,3) = unstableDir(i);
+      midP(i,3) = unstableDir(i);         // todo: for homoclinic it would be better to compute dpm/dtheta as the unstable dir
     }
 
     orthogonalizeRelativeColumn(midP,1);
-  }
-  
-  midPoincareMap( IVector _params, IMap _vectorField, IMap _vectorFieldRev, const IMatrix& _P1, const IMatrix& _P2, const IVector& _GammaU1, const IVector& _GammaU2, 
-                                                                                        interval& _ru1, interval& _rs2, interval dir = interval(1.), int _div=1 ) 
-    // the same but with params treated as variables of velocity 0, same as with second constructor of FhnPoincareMap
-  : FhnPoincareMap( _params, _vectorField, _P1, _P2, _GammaU1, _GammaU2, _ru1, _rs2, dir, _div ),  
-    midCenterVector( dim ),
-    midP( dim, dim ),
-    midSection( midCenterVector, midCenterVector ),
-    vectorFieldRev( _vectorFieldRev )
-  {
-    ICoordinateSection tempSection( dim, 0, ( (80./100.)*_GammaU1[0] + (20./100.)*_GammaU2[0] ) ); // an auxiliary section u = ( GammaU1[0] + GammaU2[0] )/2
-
-    ITaylor tempSolver( vectorField, order );
-    IPoincareMap tempPM( tempSolver, tempSection );
-
-    interval returnTime;
-    C0HOTripletonSet C0TempCenterSet( section1CenterVector );
-
-    midCenterVector = tempPM( C0TempCenterSet, returnTime );
-    midSection.setOrigin( midVector(midCenterVector) );
-
-    IVector normalVector( leftVector( midVector(vectorField( midCenterVector )) ) );
-    midSection.setNormalVector( normalVector );
-
-    // some objects here (solver, returntime) could have been reused but for safety we create new ones
-    interval returnTime2;    
-    interval returnTime2Rev;
-
-    IMatrix monodromyMatrix( dim, dim );
-    IMatrix monodromyMatrixRev( dim, dim );
-
-    ITaylor tempSolver2( vectorField, order );
-    ITaylor tempSolver2Rev( vectorFieldRev, order );
-
-    C1Rect2Set C1TempCenterSet( section1CenterVector );
-    C1Rect2Set C1TempCenterSetRev( section2CenterVector );
-
-    IPoincareMap tempPM2( tempSolver2, midSection );
-    IPoincareMap tempPM2Rev( tempSolver2Rev, midSection );
-
-    IVector tempVect = tempPM2( C1TempCenterSet, monodromyMatrix, returnTime2 );
-    IVector tempVectRev = tempPM2Rev( C1TempCenterSetRev, monodromyMatrixRev, returnTime2Rev );
-
-    IVector stableDir = ( tempPM2Rev.computeDP( tempVectRev, monodromyMatrixRev, returnTime2Rev ) )*P2.column(2);
-    IVector unstableDir = ( tempPM2.computeDP( tempVect, monodromyMatrix, returnTime2 ) )*P1.column(2);
-
-    IEuclNorm vectorNorm;
-
-    stableDir = stableDir / vectorNorm( stableDir );
-    unstableDir = unstableDir / vectorNorm( unstableDir );
-
-    for( int i = 1; i <= dim; i++ )
-    {
-      if( i > 3 )
-      {
-        for( int j = 1; j <= dim; j++ )         // for the parameters we want the coordinate change matrix to be like identity
-        {                                       // so we adjust it manually (observe that this agrees with that midSection normal vector is 0 on coordinates corresp. to parameters
-          midP(i,j) = 0.;                       // We are allowed to perform such actions because the coordinate change does not need to be rigorous, just good enough to get coverings.
-          midP(j,i) = 0.;                       // The only thing to keep in mind is that the section normal vector has to agree with one of the coordinate change columns.  
-        }
-        midP(i,i) = interval(1.);
-      }
-      midP(i,2) = normalVector[i-1];
-      midP(i,1) = stableDir(i);
-      midP(i,3) = unstableDir(i);
-    }
-    orthogonalizeRelativeColumn(midP,1);
+    vectorField.setParameter("theta", thetaRange );
+    vectorField.setParameter("eps", epsRange );
   }
 
+  // #include "todo/midPMwithparams.hpp" 
 
   IVector integrateToMidSection( const IVector& theSet, bool dir ) // 2-dim h-set is embedded into space and integrated forward from section 1 if dir = 0 and backward from section 2 elsewise
   {
+    interval totalTime;
     ITaylor *midSolver;
     IPoincareMap *midPM;
 
@@ -360,23 +202,42 @@ public:
 
     IVector resultArr(2);
  
-    int div_i;
-    int div_j;
+    int div_i( div );
+    int div_j( div );
 
-    if( theSet[0].leftBound() == theSet[0].rightBound() )   // check whether we integrate one of the unstable edges of an h-set
-       div_j=1;
-    else 
-       div_j=div;
-  
-    if( theSet[1].leftBound() == theSet[1].rightBound() )   // check whether we integrate one of the stable edges of an h-set
-       div_i=1;
-    else 
-       div_i=div;
+    // check whether we integrate one of the unstable edges of an h-set the stable edges of an h-set
+    interval edgeIntegrationSign(0.); // stores information about which side of a left/right stable edge we integrate: <0 left >0 right ==0 we integrate the whole h-set
+    if( theSet[0].leftBound() == theSet[0].rightBound() )        
+    {
+      div_i=1;
+      edgeIntegrationSign = theSet[0].leftBound();
+    }
+    if( theSet[1].leftBound() == theSet[1].rightBound() )        
+    {
+      div_i=1;
+      edgeIntegrationSign = theSet[1].leftBound();
+    }
+
 
     for(int i=1; i<=div_i; i++)
     {
-
       interval ti = interval(i-1, i)/div_i;
+      IVector Gamma_div( dim );
+
+      if( edgeIntegrationSign > 0. && !dir )
+        Gamma_div = GammaRight1;
+      else if( edgeIntegrationSign < 0. && !dir )
+        Gamma_div = GammaLeft1;
+      else if( edgeIntegrationSign == 0. && !dir )
+        Gamma_div = ( GammaRight1 - GammaLeft1 )*ti + GammaLeft1;     // subdivision of v coordinate
+      else if( edgeIntegrationSign > 0. && dir )
+        Gamma_div = GammaRight2;
+      else if( edgeIntegrationSign < 0. && dir )
+        Gamma_div = GammaLeft2;
+      else if( edgeIntegrationSign == 0. && dir )
+        Gamma_div = ( GammaRight2 - GammaLeft2 )*ti + GammaLeft2;     // subdivision of v coordinate
+      else 
+        throw "SUBDIVISION ERROR";
 
       for(int j=1; j<=div_j; j++)
       {
@@ -387,32 +248,28 @@ public:
 
         if( !dir )
         {
-          Set_ij[0] = ( theSet[0].rightBound() - theSet[0].leftBound() )*ti + theSet[0].leftBound();    // subdivision of ys coordinate
-          Set_ij[2] = ( theSet[1].rightBound() - theSet[1].leftBound() )*tj + theSet[1].leftBound();    // subdivision of v coordinate
+          Set_ij[0] = ( theSet[0].rightBound() - theSet[0].leftBound() )*tj + theSet[0].leftBound();    // subdivision of ys coordinate
+          Set_ij[1] = y1vector[1];
         }
         else
         {
-          Set_ij[2] = ( theSet[0].rightBound() - theSet[0].leftBound() )*ti + theSet[0].leftBound();    // subdivision of v coordinate
+          Set_ij[0] = y2vector[0];
           Set_ij[1] = ( theSet[1].rightBound() - theSet[1].leftBound() )*tj + theSet[1].leftBound();    // subdivision of yu coordinate
         }
- 
 
         C0HOTripletonSet *setAff;
 
-
         if( !dir )
-          setAff = new C0HOTripletonSet( section1CenterVector, P1, Set_ij ); // the set moved to default space, observe that parameters remain unchanged
+          setAff = new C0HOTripletonSet( Gamma_div, P1, Set_ij ); // the set moved to default space, observe that parameters remain unchanged when withParams is on
         else
-          setAff = new C0HOTripletonSet( section2CenterVector, P2, Set_ij );
+          setAff = new C0HOTripletonSet( Gamma_div, P2, Set_ij );
         
-  
 
         interval returntime(0.);
         IVector result = (*midPM)( *setAff, midCenterVector, inverseMatrix(midP), returntime );     // result is moved back to local coordinates, yu should be close to 0 
                                                                                             // in other words midP^-1( PM(setAff) - midCenterVector ) is computed 
-                                                                                            // WARNING! THIS ZEROES PARAMETERS SO AS SUCH RESULT SHOULD NOT BE USED,
+                                                                                            // WARNING! FOR WITH_PARAMS=1 THIS ZEROES PARAMETERS SO AS SUCH RESULT SHOULD NOT BE USED,
                                                                                             // ONLY FIRST 3 COORDINATES OF IT (RETURNED BY THIS FUNCTION) CAN BE USED
-
 
         delete setAff;
  
@@ -420,19 +277,22 @@ public:
         {
           resultArr[0] = result[0];   // midSection coordinates are given by midP - matrix P1 evolved by var. equation so similarly to P1 we project to ys, v coords, v "unstable"
           resultArr[1] = result[2];  
+          totalTime = returntime;
         }
         else
         {
           resultArr[0] = intervalHull(resultArr[0], result[0]);
           resultArr[1] = intervalHull(resultArr[1], result[2]);
+          totalTime = intervalHull( totalTime, returntime );
         }
       }
     }
     delete midPM;
     delete midSolver; 
+
+     //  cout << "TOTAL TIME: " << totalTime << "\n";
     return resultArr;
   }
-
 
   bool checkCovering( const IVector& Set1, const IVector& Set2, bool _verbose )  // both Set1 and Set2 are 2-dim and have first variable stable second unstable ( Set1 : ys, v; Set2 : v, yu )
   {
@@ -463,7 +323,56 @@ public:
 
     if( !( PSetUL1[1] + EPS < 0. && PSetUR1[1] - EPS > 0. && PSetSL2[0] + EPS < 0. && PSetSR2[0] - EPS > 0. ) )  // some reality checks for hyperbolicity
      throw "INTEGRATION TO MIDSECTION ERROR! \n";
+
+    if( PSetSL2[0] < setToBackCover[0].leftBound() && PSetSR2[0] > setToBackCover[0].rightBound() && subsetInterior( PSet2[1], setToBackCover[1] ) )
+      return 1;
+    else 
+      return 0;
+  }
+ 
+  bool shootWithTheta( const IVector& Set1, const IVector& Set2, bool _verbose=1 )  // both Set1 and Set2 are 2-dim and have first variable stable second unstable ( Set1 : ys, v; Set2 : v, yu )
+  {
+    // shooting with theta - theta is the unstable direction of a 1-dim h-set, rest is "error" in enclosure of the unstable manifold of (0,0,0)
+    vectorField.setParameter("theta", thetaRange);
+    IVector PSet1( integrateToMidSection( Set1, 0 ) );
+      
+    vectorField.setParameter("theta", thetaRange.leftBound() );
+    IVector PSetUL1( integrateToMidSection( Set1, 0 ) );
+ 
+    vectorField.setParameter("theta", thetaRange.rightBound() );
+    IVector PSetUR1( integrateToMidSection( Set1, 0 ) );
+
+    // these two lines just in case we changed the parameters before
+    vectorField.setParameter("theta", thetaRange );
+    vectorFieldRev.setParameter("theta", thetaRange );
+
+    // here we do a backcovering
+    IVector PSet2( integrateToMidSection( Set2 , 1 ) );
+    IVector PSetSL2( integrateToMidSection( leftS(Set2), 1 ) );
+    IVector PSetSR2( integrateToMidSection( rightS(Set2), 1 ) );
+
+  //  cout << "PSet1 = " << PSet1 << "\n " << "PSetUL1 = " << PSetUL1 << "\n PSetUR1 = " << PSetUR1 << "\n \n";
+  //  cout << "PSet2 = " << PSet2 << "\n " << "PSetSL2 = " << PSetSL2 << "\n PSetSR2 = " << PSetSR2 << "\n \n";
+
+    IVector setToBackCover( shrinkAndExpand( PSet1, 1. + EPS ) );       // we define a set that is covered by midPM( Set1 ), shrinkAndExpand adjust stable direction
+    setToBackCover[1] = interval( (PSetUL1[1] + EPS).rightBound(), (PSetUR1[1] - EPS).leftBound() );    // here we adjust the unstable direction
    
+    if( _verbose )
+    {
+      cout << "Right bound of image of left stable edge for the backcovering set: " <<  PSetSL2[0].rightBound() 
+        << "\nLeft bound of the stable direction for the set to be covered: " << setToBackCover[0].leftBound();
+      cout << "\n --- \n";
+      cout << "Left bound of image of right stable edge for the backcovering set: " <<  PSetSR2[0].leftBound() 
+        << "\nRight bound of the stable direction for the set to be covered: " << setToBackCover[0].rightBound();
+      cout << "\n --- \n";
+      cout << "Bound of the unstable direction projection of the image of the backcovering set: " << PSet2[1] 
+        << "\nUnstable direction of the set to be backcovered: " << setToBackCover[1] << "\n";
+    }
+
+
+    if( !( PSetUL1[1] + EPS < 0. && PSetUR1[1] - EPS > 0. && PSetSL2[0] + EPS < 0. && PSetSR2[0] - EPS > 0. ) )  // some reality checks for hyperbolicity
+     throw "INTEGRATION TO MIDSECTION ERROR! \n";
+
     if( PSetSL2[0] < setToBackCover[0].leftBound() && PSetSR2[0] > setToBackCover[0].rightBound() && subsetInterior( PSet2[1], setToBackCover[1] ) )
       return 1;
     else 

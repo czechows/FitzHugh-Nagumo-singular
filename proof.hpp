@@ -32,7 +32,7 @@ void FhnVerifyExistenceOfPeriodicOrbit( interval _theta, interval _eps, bool _ve
     IVector GammaUR(0.841746280832201, 0., 0.0988076360184288);                                   // UR up right, DR down right, UL up left, DL down left
     IVector GammaDR(-0.237012258083933, 0., 0.0988076360184288);
 
-    GammaQuad_correct( _theta, GammaUL, GammaDL, GammaUR, GammaDR );                              // we correct the initial guesses by nonrigorous Newtons methods (see numerics.hpp)
+    GammaQuad_correct( _theta, GammaUL, GammaDL, GammaUR, GammaDR );                              // we correct the initial guesses by nonrigorous shooting methods (see numerics.hpp)
 
     if( !(GammaUL[0] > GammaDL[0] && GammaUR[0] > GammaDR[0] && GammaUR[2] > GammaUL[2] && GammaDR[2] > GammaDL[2] ) )
       throw "NEWTON CORRECTION METHOD FOR CORNER POINTS ERROR! \n";
@@ -50,20 +50,6 @@ void FhnVerifyExistenceOfPeriodicOrbit( interval _theta, interval _eps, bool _ve
             PDR( coordChange( *Fhn_vf, GammaDR ) ); 
     
 
-    midPoincareMap *leftMap; // this class implements the Poincare maps described in the paper as pmUL, pmDL onto leftSection
-    midPoincareMap *rightMap; // this class implements the Poincare maps described in the paper as pmUR, pmDR onto rightSection
-
-    if( withParams )
-    {
-      leftMap = new midPoincareMap( parameters, *Fhn_vf_withParams, *Fhn_vf_withParams_rev, PDL, PUL, GammaDL, GammaUL, ruDL, rsUL, -1., _pMapDivCount );
-      rightMap = new midPoincareMap( parameters, *Fhn_vf_withParams, *Fhn_vf_withParams_rev, PUR, PDR, GammaUR, GammaDR, ruUR, rsDR, 1., _pMapDivCount );
-    }
-    else
-    {
-      leftMap = new midPoincareMap( *Fhn_vf, *Fhn_vf_rev, PDL, PUL, GammaDL, GammaUL, ruDL, rsUL, -1., _pMapDivCount );
-      rightMap = new midPoincareMap( *Fhn_vf, *Fhn_vf_rev, PUR, PDR, GammaUR, GammaDR, ruUR, rsDR, 1., _pMapDivCount );
-    }
-
     IVector setToIntegrateDL(2);
     IVector setToIntegrateUR(2);
 
@@ -73,8 +59,6 @@ void FhnVerifyExistenceOfPeriodicOrbit( interval _theta, interval _eps, bool _ve
     setToIntegrateUR[0] = 1.9e-2*interval(-1,1);  // this is ys at upright corner
     setToIntegrateUR[1] = 5.0e-3*interval(-1,1);  // this is v at upright corner
 
-    // sets to integrate backwards - only with the parameter _midsection = 1 on
-
     IVector setToBackIntegrateUL(2);
     IVector setToBackIntegrateDR(2);
 
@@ -83,6 +67,43 @@ void FhnVerifyExistenceOfPeriodicOrbit( interval _theta, interval _eps, bool _ve
 
     setToBackIntegrateDR[0] = 5.0e-3*interval(-1,1);     // this is v at downright corner 
     setToBackIntegrateDR[1] = 0.7e-2*interval(-1,1);        // this is yu at downright corner
+
+
+    // left isolating segments
+
+    IVector ULface( rsUL*interval(-1,1), setToBackIntegrateUL[1], 0. ); 
+    IVector DLface( setToIntegrateDL[0], ruDL*interval(-1,1), 0. ); 
+
+    FhnIsolatingSegment ULSegment( *Fhn_vf, GammaUL + IVector( 0., 0., setToBackIntegrateUL[0].leftBound() ), 
+        GammaUL + IVector( 0., 0., setToBackIntegrateUL[0].rightBound() ), PUL, ULface, ULface, _cornerSegmentDivCount ); 
+    FhnIsolatingSegment DLSegment( *Fhn_vf, GammaDL + IVector( 0., 0., setToIntegrateDL[1].leftBound() ), 
+      GammaDL + IVector( 0., 0., setToIntegrateDL[1].rightBound() ), PDL, DLface, DLface, _cornerSegmentDivCount );  
+
+
+    // right isolating segments
+
+    IVector URface( setToIntegrateUR[0], ruUR*interval(-1,1), 0. );
+    IVector DRface( rsDR*interval(-1,1), setToBackIntegrateDR[1], 0. ); 
+ 
+    FhnIsolatingSegment URSegment( *Fhn_vf, GammaUR + IVector( 0., 0., setToIntegrateUR[1].leftBound() ), 
+        GammaUR + IVector( 0.,0.,setToIntegrateUR[1].rightBound() ), PUR, URface, URface, _cornerSegmentDivCount );  
+    FhnIsolatingSegment DRSegment( *Fhn_vf, GammaDR + IVector( 0., 0., setToBackIntegrateDR[0].leftBound() ), 
+        GammaDR + IVector( 0., 0., setToBackIntegrateDR[0].rightBound() ), PDR, DRface, DRface, _cornerSegmentDivCount );  
+ 
+
+    midPoincareMap *leftMap; // this class implements the Poincare maps described in the paper as pmUL, pmDL onto leftSection
+    midPoincareMap *rightMap; // this class implements the Poincare maps described in the paper as pmUR, pmDR onto rightSection
+
+ /*   if( withParams )
+    {
+      leftMap = new midPoincareMap( parameters, *Fhn_vf_withParams, *Fhn_vf_withParams_rev, PDL, PUL, GammaDL, GammaUL, ruDL, rsUL, -1., _pMapDivCount );
+      rightMap = new midPoincareMap( parameters, *Fhn_vf_withParams, *Fhn_vf_withParams_rev, PUR, PDR, GammaUR, GammaDR, ruUR, rsDR, 1., _pMapDivCount );
+    }
+    else
+    {*/
+      leftMap = new midPoincareMap( *Fhn_vf, *Fhn_vf_rev, DLSegment, ULSegment, _theta, _eps, -1., _pMapDivCount );
+      rightMap = new midPoincareMap( *Fhn_vf, *Fhn_vf_rev, URSegment, DRSegment, _theta, _eps, 1., _pMapDivCount );
+   // }
 
     // covering checks 
 
@@ -99,16 +120,6 @@ void FhnVerifyExistenceOfPeriodicOrbit( interval _theta, interval _eps, bool _ve
 
     delete leftMap;
     delete rightMap;
-
-    // left isolating segments
-
-    IVector ULface( rsUL*interval(-1,1), setToBackIntegrateUL[1], 0. ); 
-    IVector DLface( setToIntegrateDL[0], ruDL*interval(-1,1), 0. ); 
-
-    FhnIsolatingSegment ULSegment( *Fhn_vf, GammaUL + IVector( 0., 0., setToBackIntegrateUL[0].leftBound() ), 
-        GammaUL + IVector( 0., 0., setToBackIntegrateUL[0].rightBound() ), PUL, ULface, ULface, _cornerSegmentDivCount ); 
-    FhnIsolatingSegment DLSegment( *Fhn_vf, GammaDL + IVector( 0., 0., setToIntegrateDL[1].leftBound() ), 
-      GammaDL + IVector( 0., 0., setToIntegrateDL[1].rightBound() ), PDL, DLface, DLface, _cornerSegmentDivCount );  
 
     IVector ULSegment_entranceVerification( ULSegment.entranceVerification() );
     IVector ULSegment_exitVerification( ULSegment.exitVerification() );
@@ -139,17 +150,6 @@ void FhnVerifyExistenceOfPeriodicOrbit( interval _theta, interval _eps, bool _ve
     if( !( DLSegment_entranceVerification[0] < 0. && DLSegment_entranceVerification[1] < 0. && DLSegment_exitVerification[0] > 0. && DLSegment_exitVerification[1] > 0. ) )
       throw "ISOLATION ERROR FOR DL CORNER SEGMENT! \n";
 
-
-    // right isolating segments
-
-    IVector URface( setToIntegrateUR[0], ruUR*interval(-1,1), 0. );
-    IVector DRface( rsDR*interval(-1,1), setToBackIntegrateDR[1], 0. ); 
- 
-    FhnIsolatingSegment URSegment( *Fhn_vf, GammaUR + IVector( 0., 0., setToIntegrateUR[1].leftBound() ), 
-        GammaUR + IVector( 0.,0.,setToIntegrateUR[1].rightBound() ), PUR, URface, URface, _cornerSegmentDivCount );  
-    FhnIsolatingSegment DRSegment( *Fhn_vf, GammaDR + IVector( 0., 0., setToBackIntegrateDR[0].leftBound() ), 
-        GammaDR + IVector( 0., 0., setToBackIntegrateDR[0].rightBound() ), PDR, DRface, DRface, _cornerSegmentDivCount );  
- 
 
     IVector URSegment_entranceVerification( URSegment.entranceVerification() );
     IVector URSegment_exitVerification( URSegment.exitVerification() );
