@@ -26,8 +26,9 @@ const int order = 18;                    // order for all the Taylor integrators
 #include "auxiliaries.hpp"
 #include "segments.hpp"
 #include "poincare.hpp"
-#include "proof.hpp"
-#include "homoclinic_proof.hpp"
+#include "block.hpp"
+#include "proof.hpp" // the proof for the periodic orbit
+#include "homoclinic_proof.hpp" // the proof for the homoclinic orbit
 
 // ---------------------------------------------------------------------------------
 // ----------------------------------- MAIN ----------------------------------------
@@ -56,16 +57,16 @@ int main(){
 
   interval thetaGuess = interval(111.)/100.;   // we only try to prove the fast wave, the slow one does not come from the singular perturbation [KSS]
   bool verbose = 1; 
-  bool with_params = 0; // allowing parameters to evolve as variables with velocity 0 does not improve significantly the results
+  bool with_params = 0; // allowing parameters to evolve as variables with velocity 0 does not improve significantly the results -- OUT OF SUPPORT!
  
-  interval eps = interval(0.,4.)/1e6;  
+  interval eps = interval(0.,5.)/1e5;  
   FhnVerifyExistenceOfHomoclinicOrbit( thetaGuess, eps, verbose, with_params );
 
-  eps = interval(4.,6.)/1e6;  
-  FhnVerifyExistenceOfHomoclinicOrbit( thetaGuess, eps, verbose, with_params );
+  //eps = interval(4.,6.)/1e5; //doesnt work  
+ // FhnVerifyExistenceOfHomoclinicOrbit( thetaGuess, eps, verbose, with_params );
  
-  eps = interval(6.,10.)/1e6;  
-  FhnVerifyExistenceOfHomoclinicOrbit( thetaGuess, eps, verbose, with_params );
+ // eps = interval(6.,10.)/1e5;  //doesnt work
+ // FhnVerifyExistenceOfHomoclinicOrbit( thetaGuess, eps, verbose, with_params );
  
   time (&end1);
   double dif1 = difftime( end1, start1 );
@@ -73,7 +74,7 @@ int main(){
 
 
 /*
-  // THE PERIODIC ORBIT PROOF FROM THE FIRST PAPER
+  // THE PERIODIC ORBIT PROOF FROM THE ARXIV PAPER
   interval theta = interval(61.)/100.;  
   interval eps = interval(0.,1.)/1e4;  
   bool verbose = 1; 

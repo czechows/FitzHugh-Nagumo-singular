@@ -64,11 +64,14 @@ IMatrix coordChange( IMap vectorField, const IVector& Gamma ) // matrix of coord
     P_result(i,3) = P( i, i_med );
   }
 
-
   // next two lines depend on the dimension and mean that we are only changing coordinates for the fast variables (2x2 matrix), slow remain unchanged (are treated as a parameter)
   // here we explicitly assume vdim = 3 and last variable is slow!
   P_result[0][2] = P_result[1][2] = P_result[2][0] = P_result[2][1] = 0.;
   P_result[2][2] = -1.;      // -1 because we add a minus in return
+
+  //cout << P_result << "\n";
+  //cout << "eigval: " << tempvectRe << "\n";
+
 
   return -IMatrix(P_result); // minus eigenvectors are also eigenvectors and such transformed matrix suits better our computations - one could also put minuses
                             // into displacements of sections and sets to integrate from slow manifolds
@@ -367,11 +370,22 @@ public:
 
      // UNCOMMENT FOR THROWING ISOLATION EXCEPTIONS ON THE RUN TO BREAK FROM PROGRAM FASTER - NOT NECESSARY FOR THE PROOF BUT SAVES TIME
      if( vectalg::containsZero( IVector( {intervalHull( NormalSLxVectorFieldHull, NormalSRxVectorFieldHull )} ) ) )
+     {
+       cout << "intervalHull( NormalSLxVectorFieldHull, NormalSRxVectorFieldHull ) = " << intervalHull( NormalSLxVectorFieldHull, NormalSRxVectorFieldHull ) << "\n";
+       cout << "NO ISOLATION AT SEGMENT i= " << i << "\n";
+       cout.flush();
+
        throw "ISOLATION ERROR FOR ONE OF THE REGULAR ISOLATING SEGMENTS! \n" ; 
+     }
 
      if( vectalg::containsZero( IVector( {intervalHull( NormalULxVectorFieldHull, NormalURxVectorFieldHull )} ) ) )
+     {
+       cout << "intervalHull( NormalULxVectorFieldHull, NormalURxVectorFieldHull ) = " << intervalHull( NormalULxVectorFieldHull, NormalURxVectorFieldHull ) << "\n";
+       cout << "NO ISOLATION AT SEGMENT i= " << i << "\n";
+       cout.flush();
+
        throw "ISOLATION ERROR FOR ONE OF THE REGULAR ISOLATING SEGMENTS! \n" ; 
-     
+     }
 
      Gamma_i0 = Gamma_i1;  // we move to the next subsegment
      Face_i0 = Face_i1;
@@ -392,12 +406,9 @@ public:
   FhnIsolatingBlock( IMap _vectorField, const IVector& _GammaLeft, const IVector& _GammaRight, const IMatrix& _P, const IVector& _leftFace, const IVector& _rightFace, interval _div )
   : FhnIsolatingSegment( _vectorField, _GammaLeft, _GammaRight, _P, _leftFace, _rightFace, _div, 1 ) // it is a block so we don't check whether VF is uniform in one direction
   {
-    // to obtain isolation we check u>v on the left slow face and u<v on the right slow face, ONLY FOR THE FITZHUGH-NAGUMO VECTOR FIELD!
+    // to obtain isolation in the central (second entry) direction we check u>v on the left slow face and u<v on the right slow face, ONLY FOR THE FITZHUGH-NAGUMO VECTOR FIELD!
     if( !( ( GammaRight + P*rightFace )[0] < GammaRight[2] && ( GammaLeft + P*leftFace )[0] > GammaLeft[2] ) )  
     {
-    //  cout << "GAMMARIGHT[0]: " << ( GammaRight + P*rightFace )[0] << "\n";
-    //  cout << "GAMMARIGHT[2]: " << GammaRight[2]  << "\n";
-
       throw "No isolation in the slow direction for the isolating block! \n";
     }
   }

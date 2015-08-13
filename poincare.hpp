@@ -113,7 +113,7 @@ public:
 
     if( _segment1.isABlock ) // a check on whether we do a homoclinic orbit proof
     {
-      tempSection.setConstant( (20./100.)*GammaCenter1[0] + (80./100.)*GammaCenter2[0] );
+      tempSection.setConstant( (20./100.)*midVector(GammaCenter1)[0] + (80./100.)*midVector(GammaCenter2)[0] );
     }
 
     interval midThetaRange( thetaRange.leftBound()/2. + thetaRange.rightBound()/2. );
@@ -330,19 +330,25 @@ public:
       return 0;
   }
  
-  bool shootWithTheta( const IVector& Set1, const IVector& Set2, bool _verbose=1 )  // both Set1 and Set2 are 2-dim and have first variable stable second unstable ( Set1 : ys, v; Set2 : v, yu )
+  bool shootWithTheta( C0Rect2Set uMan, C0Rect2Set uManLeft, C0Rect2Set uManRight, const IVector& Set2, bool _verbose=1 )  // both Set1 and Set2 are 2-dim and have first variable stable second unstable ( Set1 : ys, v; Set2 : v, yu )
   {
     // shooting with theta - theta is the unstable direction of a 1-dim h-set, rest is "error" in enclosure of the unstable manifold of (0,0,0)
-    vectorField.setParameter("theta", thetaRange);
-    IVector PSet1( integrateToMidSection( Set1, 0 ) );
-      
-    vectorField.setParameter("theta", thetaRange.leftBound() );
-    IVector PSetUL1( integrateToMidSection( Set1, 0 ) );
- 
-    vectorField.setParameter("theta", thetaRange.rightBound() );
-    IVector PSetUR1( integrateToMidSection( Set1, 0 ) );
 
-    // these two lines just in case we changed the parameters before
+    IPoincareMap midPM( solver, midSection );
+
+    interval returnTime(0.);
+    vectorField.setParameter("theta", thetaRange);
+    IVector PSet1( midPM( uMan, midCenterVector, inverseMatrix(midP), returnTime ) );
+      
+    returnTime = 0.;
+    vectorField.setParameter("theta", thetaRange.leftBound() );
+    IVector PSetUL1( midPM( uManLeft, midCenterVector, inverseMatrix(midP), returnTime ) );
+ 
+    returnTime = 0.;
+    vectorField.setParameter("theta", thetaRange.rightBound() );
+    IVector PSetUR1( midPM( uManRight, midCenterVector, inverseMatrix(midP), returnTime ) );
+
+    // these two lines to come back to original parameters
     vectorField.setParameter("theta", thetaRange );
     vectorFieldRev.setParameter("theta", thetaRange );
 
@@ -355,7 +361,8 @@ public:
   //  cout << "PSet2 = " << PSet2 << "\n " << "PSetSL2 = " << PSetSL2 << "\n PSetSR2 = " << PSetSR2 << "\n \n";
 
     IVector setToBackCover( shrinkAndExpand( PSet1, 1. + EPS ) );       // we define a set that is covered by midPM( Set1 ), shrinkAndExpand adjust stable direction
-    setToBackCover[1] = interval( (PSetUL1[1] + EPS).rightBound(), (PSetUR1[1] - EPS).leftBound() );    // here we adjust the unstable direction
+    setToBackCover[1] = interval( (PSetUL1[2] + EPS).rightBound(), (PSetUR1[2] - EPS).leftBound() );    // here we adjust the unstable direction -- we remember that the third coordinate in
+                                                                                                        // midP variables is the "unstable" one
    
     if( _verbose )
     {
@@ -370,7 +377,7 @@ public:
     }
 
 
-    if( !( PSetUL1[1] + EPS < 0. && PSetUR1[1] - EPS > 0. && PSetSL2[0] + EPS < 0. && PSetSR2[0] - EPS > 0. ) )  // some reality checks for hyperbolicity
+    if( !( PSetUL1[2] + EPS < 0. && PSetUR1[2] - EPS > 0. && PSetSL2[0] + EPS < 0. && PSetSR2[0] - EPS > 0. ) )  // some reality checks for hyperbolicity
      throw "INTEGRATION TO MIDSECTION ERROR! \n";
 
     if( PSetSL2[0] < setToBackCover[0].leftBound() && PSetSR2[0] > setToBackCover[0].rightBound() && subsetInterior( PSet2[1], setToBackCover[1] ) )
