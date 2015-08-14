@@ -42,11 +42,16 @@ class FhnBlockWithCones
     CB = krawczykInverse( InvCB );
     CB = leftVector( midVector( CB ) );
 
+    InvCB = krawczykInverse( CB );
+ 
+    InvCB[2][0] = 0.;             // this is already done in coordChange, but just for clarity
+    InvCB[2][1] = 0.; 
+    
     CB[2][0] = 0.;             
     CB[2][1] = 0.; 
 
-    if( vectalg::containsZero( IVector({det(CB)}) ) || vectalg::containsZero( IVector({det(InvCB)}) ) )
-      throw "Change of coordinates not invertible!";
+    //if( vectalg::containsZero( IVector({det(CB)}) ) || vectalg::containsZero( IVector({det(InvCB)}) ) )
+    //  throw "Change of coordinates not invertible!";
   }
 
   IVector evaluateVFinNewVariables( IVector x )
@@ -63,7 +68,9 @@ class FhnBlockWithCones
   IVector evaluateLastRowDFcDivEps( IVector x ) // computes 1/eps (last row DF_c), that is the slow part of the vector field without epsilon -- only when the slow part is epsilon-independent!
   {
     IMap newVectorField( vectorField );
-    newVectorField.setParameter("eps", interval(1.));
+    newVectorField.setParameter("eps", interval(1.));      // from the form of C we have last row of Qeps * CB * DF * CB-1
+                                                           // is equal to last row of Q1 * CB * DFdivEps * CB-1
+                                                           // and only the last row of DFdivEps matters
     return ( CB*newVectorField[ InvCB*x ]*InvCB ).row(2);
   }
 
@@ -74,7 +81,7 @@ class FhnBlockWithCones
     IMatrix Q1(3,3,Q1formdat);
     
     IMatrix result = Q1*CB*vectorField[ InvCB*x ]*InvCB;
-    IVector resultLastRow = -evaluateLastRowDFcDivEps( x );
+    IVector resultLastRow = -evaluateLastRowDFcDivEps( x ); 
 
     result[2][0] = resultLastRow[0];
     result[2][1] = resultLastRow[1];

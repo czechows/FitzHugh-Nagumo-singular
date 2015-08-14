@@ -26,7 +26,7 @@ const int order = 18;                    // order for all the Taylor integrators
 #include "auxiliaries.hpp"
 #include "segments.hpp"
 #include "poincare.hpp"
-#include "block.hpp"
+#include "block.hpp"  // Warning! parameter a=1/10 hardcoded there
 #include "proof.hpp" // the proof for the periodic orbit
 #include "homoclinic_proof.hpp" // the proof for the homoclinic orbit
 
