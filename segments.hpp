@@ -406,8 +406,10 @@ public:
   FhnIsolatingBlock( IMap _vectorField, const IVector& _GammaLeft, const IVector& _GammaRight, const IMatrix& _P, const IVector& _leftFace, const IVector& _rightFace, interval _div )
   : FhnIsolatingSegment( _vectorField, _GammaLeft, _GammaRight, _P, _leftFace, _rightFace, _div, 1 ) // it is a block so we don't check whether VF is uniform in one direction
   {
-    // to obtain isolation in the central (second entry) direction we check u>v on the left slow face and u<v on the right slow face, ONLY FOR THE FITZHUGH-NAGUMO VECTOR FIELD!
-    if( !( ( GammaRight + P*rightFace )[0] < GammaRight[2] && ( GammaLeft + P*leftFace )[0] > GammaLeft[2] ) )  
+    // to obtain isolation in the central (second entry) direction we check u>v on the left slow face and u<v 
+    // on the right slow face, ONLY FOR THE FITZHUGH-NAGUMO VECTOR FIELD! -- assumes that the vector field is const(u-v), const>0
+    if( !( ( GammaRight + P*rightFace )[0] < ( GammaRight + P*rightFace )[2] 
+          && ( GammaLeft + P*leftFace )[0] > ( GammaLeft + P*leftFace )[2] ) )  
     {
       throw "No isolation in the slow direction for the isolating block! \n";
     }

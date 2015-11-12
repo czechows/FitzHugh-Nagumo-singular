@@ -53,10 +53,10 @@ public:
       GammaCenter1( GammaLeft1/2. + GammaRight1/2. ),            // these are only for 'nonrigorous' numerics now, i.e. finding the mid section
       GammaCenter2( GammaLeft2/2. + GammaRight2/2. ),            // we always choose the segments so the center vector is one of the corner points
 
-      y1vector( 0., -dir*_segment1.rightFace[1].rightBound(), 0. ),                              
+      y1vector( 0., -dir*_segment1.rightFace[1].rightBound(), 0. ),           // here we choose which one of two faces we integrate, "dir is reversed"                   
       section1CenterVector( P1*y1vector + GammaCenter1 ),
 
-      y2vector( dir*_segment2.rightFace[0].rightBound(), 0., 0. ),                             
+      y2vector( dir*_segment2.rightFace[0].rightBound(), 0., 0. ),            // same here
       section2CenterVector( P2*y2vector + GammaCenter2 ),
 
       div( _div ),
@@ -101,7 +101,7 @@ public:
   
   midPoincareMap( IMap _vectorField, IMap _vectorFieldRev, const FhnIsolatingSegment _segment1, const FhnIsolatingSegment _segment2, interval _thetaRange, interval _epsRange, 
       interval dir = interval(1.), int _div=1 ) 
-  : FhnPoincareMap( _vectorField, _segment1, _segment2, dir, _div ),
+  : FhnPoincareMap( _vectorField, _segment1, _segment2, dir, _div ), // if dir = -1 we integrate forward from right face, if dir=1 from left (why reversed? to improve readability maybe correct)
     midCenterVector( dim ),
     midP( dim, dim ),
     midSection( midCenterVector, midCenterVector ),
@@ -257,12 +257,12 @@ public:
           Set_ij[1] = ( theSet[1].rightBound() - theSet[1].leftBound() )*tj + theSet[1].leftBound();    // subdivision of yu coordinate
         }
 
-        C0HOTripletonSet *setAff;
+        C0Rect2Set *setAff;
 
         if( !dir )
-          setAff = new C0HOTripletonSet( Gamma_div, P1, Set_ij ); // the set moved to default space, observe that parameters remain unchanged when withParams is on
+          setAff = new C0Rect2Set( Gamma_div, P1, Set_ij ); // the set moved to default space, observe that parameters remain unchanged when withParams is on
         else
-          setAff = new C0HOTripletonSet( Gamma_div, P2, Set_ij );
+          setAff = new C0Rect2Set( Gamma_div, P2, Set_ij );
         
 
         interval returntime(0.);

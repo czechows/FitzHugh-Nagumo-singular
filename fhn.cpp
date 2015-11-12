@@ -61,55 +61,44 @@ int main(){
  
   interval eps = interval(0.,5.)/1e5;  
   FhnVerifyExistenceOfHomoclinicOrbit( thetaGuess, eps, verbose, with_params );
-
-  //eps = interval(4.,6.)/1e5; //doesnt work  
- // FhnVerifyExistenceOfHomoclinicOrbit( thetaGuess, eps, verbose, with_params );
- 
- // eps = interval(6.,10.)/1e5;  //doesnt work
- // FhnVerifyExistenceOfHomoclinicOrbit( thetaGuess, eps, verbose, with_params );
  
   time (&end1);
   double dif1 = difftime( end1, start1 );
-  cout << "Elapsed time for the proof is " << dif1 << " seconds. \n";
+  cout << "Elapsed time for the homoclinic orbit proof is " << dif1 << " seconds. \n";
 
 
-/*
+
   // THE PERIODIC ORBIT PROOF FROM THE ARXIV PAPER
-  interval theta = interval(61.)/100.;  
-  interval eps = interval(0.,1.)/1e4;  
-  bool verbose = 1; 
-  bool with_params = 0; // allowing parameters to evolve as variables with velocity 0 does not improve significantly the results
+   interval theta = interval(61.)/100.;  
+   eps = interval(0.,1.)/1e4;  
   
-  FhnVerifyExistenceOfPeriodicOrbit( theta, eps, verbose, with_params );
-
-  time (&end1);
-  double dif1 = difftime( end1, start1 );
-  cout << "Elapsed time for the proof for parameter range eps = " << eps << " is " << dif1 << " seconds. \n";
-
   time_t start2,end2;
   time (&start2);
+
+  FhnVerifyExistenceOfPeriodicOrbit( theta, eps, verbose, with_params );
+
+  time (&end2);
+  double dif2 = difftime( end2, start2 );
+  cout << "Elapsed time for the periodic orbit proof for parameter range eps = " << eps << " is " << dif2 << " seconds. \n";
+
+
+  time_t start3,end3;
+  time (&start3);
   eps = interval("1e-4","1.5e-4");  
   
   FhnVerifyExistenceOfPeriodicOrbit( theta, eps, verbose, with_params );
   
-  time (&end2);
-  double dif2 = difftime( end2, start2 );
-  cout << "Elapsed time for the proof for parameter range eps = " << eps << " is " << dif2 << " seconds. \n";
-*/
- /* 
-  eps = interval(1.5,2.)/1e4;  
-  FhnVerifyExistenceOfPeriodicOrbit( theta, eps, verbose, with_params );
-  // this already fails
+  time (&end3);
+  double dif3 = difftime( end3, start3 );
+  cout << "Elapsed time for the periodic orbit proof for parameter range eps = " << eps << " is " << dif3 << " seconds. \n";
 
 
-  // other thetas:
-
+  // other thetas
+/*
   theta = interval(53.)/100;
   eps = interval(0.,1.)/2e4;
 
   FhnVerifyExistenceOfPeriodicOrbit( theta, eps, verbose, with_params );
-
-
 
   theta = interval(47.)/100;
   eps = interval(0.,1.)/2e4;
@@ -120,6 +109,14 @@ int main(){
   eps = interval(0.,1.)/2e4;
 
   FhnVerifyExistenceOfPeriodicOrbit( theta, eps, verbose, with_params );
+*/
+ /* 
+  eps = interval(1.5,2.)/1e4;  
+  FhnVerifyExistenceOfPeriodicOrbit( theta, eps, verbose, with_params );
+  // this already fails
+
+
+  // other thetas:
   */
 
 

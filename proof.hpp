@@ -48,8 +48,7 @@ void FhnVerifyExistenceOfPeriodicOrbit( interval _theta, interval _eps, bool _ve
             PUR( coordChange( *Fhn_vf, GammaUR ) ), 
             PDL( coordChange( *Fhn_vf, GammaDL ) ),  
             PDR( coordChange( *Fhn_vf, GammaDR ) ); 
-    
-
+ 
     IVector setToIntegrateDL(2);
     IVector setToIntegrateUR(2);
 

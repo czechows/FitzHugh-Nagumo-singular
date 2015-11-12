@@ -10,7 +10,7 @@
 /* --------------------------------------------------------------------------------------- */
 
 
-void FhnVerifyExistenceOfHomoclinicOrbit( interval _theta, interval _eps, bool _verbose = 0, bool withParams = 0, interval _thetaVar=interval(-2.5e-3,2.5e-3), int _pMapDivCount = 20, 
+void FhnVerifyExistenceOfHomoclinicOrbit( interval _theta, interval _eps, bool _verbose = 0, bool withParams = 0, interval _thetaVar=interval(-2.5e-3,2.5e-3), int _pMapDivCount = 25, 
      int _chainSubsegmentCountU = 200, int _chainSubsegmentCountD =400, int _chainSegmentDivCountU = 110, int _chainSegmentDivCountD = 110, int _cornerSegmentDivCount = 150 ) 
   // verbose on displays all the interval enclosures for Poincare maps / products of the vector fields with normals; other parameters control respectively: 
   // number of subdivisions of sets to integrate (in each dimension), number of subsegments along slow manifolds, number of subdivisions of regular/corner segments
@@ -28,19 +28,20 @@ void FhnVerifyExistenceOfHomoclinicOrbit( interval _theta, interval _eps, bool _
 
     GammaHom_correct( _theta, GammaUL, GammaDL, GammaUR, GammaDR );                              // we correct the initial guesses by nonrigorous shooting methods (see numerics.hpp)
 
-    GammaDL = IVector({0.,0.,0.});       
-    GammaUL[2] = 0.;
+    GammaDL = IVector({0.,0.,0.});       // this we can compute rigorously -- it is the zero equilibrium
+    GammaUL[2] = 0.;                     // it lies in the same fast subsystem as the equilibrium
 
-    cout << "Initial guesses: \n";
+    cout << "Numerical guesses: \n";
     cout << "theta = " << _theta << "\nGammaUL = " << GammaUL << "\nGammaDL = " << GammaDL << "\nGammaUR = " << GammaUR << "\nGammaDR = " << GammaDR << "\n \n";
  
     if( !(GammaUL[0] > GammaDL[0] && GammaUR[0] > GammaDR[0] && GammaUR[2] > GammaUL[2] && GammaDR[2] > GammaDL[2] ) )
       throw "NEWTON CORRECTION METHOD FOR CORNER POINTS ERROR! \n";
 
-    _theta = _theta + _thetaVar; // for shooting with theta
-
-    (*Fhn_vf).setParameter("theta",_theta.leftBound() );
+   
+    (*Fhn_vf).setParameter("theta",_theta ); // to compute PUL PUR PDL PDR with less wrapping
     (*Fhn_vf).setParameter("eps",_eps);
+
+    _theta = _theta + _thetaVar; // for shooting with theta and for the rest of the proof
  
     (*Fhn_vf_rev).setParameter("theta",_theta);
     (*Fhn_vf_rev).setParameter("eps",_eps);
@@ -50,10 +51,18 @@ void FhnVerifyExistenceOfHomoclinicOrbit( interval _theta, interval _eps, bool _
             PDL( coordChange( *Fhn_vf, GammaDL ) ),  // this one is only for fixing a midsection
             PDR( coordChange( *Fhn_vf, GammaDR ) ); 
 
+
     IVector setToIntegrateDL(2);
     IVector setToIntegrateUR(2);
     IVector setToBackIntegrateUL(2);
     IVector setToBackIntegrateDR(2);
+
+    (*Fhn_vf).setParameter("theta",_theta ); // back to the whole range
+
+    /* -- cout << "PUL = " << PUL << "\n";
+    cout << "PUR = " << PUR << "\n";
+    cout << "PDL = " << PDL << "\n";
+    cout << "PDR = " << PDR << "\n"; -- */
 
     /*---------------------- BLOCKS ------------------------*/
 
@@ -66,7 +75,9 @@ void FhnVerifyExistenceOfHomoclinicOrbit( interval _theta, interval _eps, bool _
  
     FhnBlockWithCones BS( *Fhn_vf, sMan_ruDL, sMan_rsDL, sMan_vDL ); //move a gamma as fixed params
     BS.coneConditionsVerification();
-
+ 
+    // cout << "cBS-1= " << BS.InvCB << "\n";
+    //
     // the unstable manifold block sizes
     interval ruDL(8.0e-5);    // this is yu at the downleft corner      
     setToIntegrateDL[0] = 0.8e-5*interval(-1,1);  // this is ys at downleft corner  
@@ -173,7 +184,6 @@ void FhnVerifyExistenceOfHomoclinicOrbit( interval _theta, interval _eps, bool _
 
     FhnIsolatingSegment ULSegment( *Fhn_vf, GammaUL_left, GammaUL_right, PUL, ULface, ULface, _cornerSegmentDivCount ); 
 
-    midPoincareMap *leftMap; // left Poincare map - shooting with theta
     
     // this block is created only to get some coordinates for midPoincareMap
     FhnIsolatingBlock uManDLBlock( BU.createABlock( _cornerSegmentDivCount ) );  
@@ -182,8 +192,8 @@ void FhnVerifyExistenceOfHomoclinicOrbit( interval _theta, interval _eps, bool _
     IVector uManDLBlock_entranceVerification( uManDLBlock.entranceVerification() );
     IVector uManDLBlock_exitVerification( uManDLBlock.exitVerification() );
  
-    IVector sManDLBlock_entranceVerification( uManDLBlock.entranceVerification() );
-    IVector sManDLBlock_exitVerification( uManDLBlock.exitVerification() );
+    IVector sManDLBlock_entranceVerification( sManDLBlock.entranceVerification() );
+    IVector sManDLBlock_exitVerification( sManDLBlock.exitVerification() );
 
 
     if( _verbose )
@@ -204,7 +214,8 @@ void FhnVerifyExistenceOfHomoclinicOrbit( interval _theta, interval _eps, bool _
 
       cout << "\n --- \n";
 
-      cout << "Isolation in the second entry (slow) direction is verified in the constructor, if there is no isolation an exception would have been thrown \n";
+      cout << "Isolation in the second entry (slow) direction is verified in constructors of blocks, if there is no isolation an exception would have been thrown \n";
+      cout << "Existence of a connecting isolating segment in the unstable direction is verified in the constructor of uManDLBlock, if there is no isolation an exception would have been thrown \n";
 
       cout << "\n --- \n";
     };
@@ -215,6 +226,7 @@ void FhnVerifyExistenceOfHomoclinicOrbit( interval _theta, interval _eps, bool _
       throw "ISOLATION ERROR FOR sManDL BLOCK! \n";
 
 
+    midPoincareMap *leftMap; // left Poincare map - shooting with theta
     leftMap = new midPoincareMap( *Fhn_vf, *Fhn_vf_rev, uManDLBlock, ULSegment, _theta, _eps, -1., _pMapDivCount );
 
     // covering checks 
@@ -283,14 +295,14 @@ void FhnVerifyExistenceOfHomoclinicOrbit( interval _theta, interval _eps, bool _
           && DownSegment_entranceAndExitVerification[2] > 0. && DownSegment_entranceAndExitVerification[3] > 0. ) )
       throw "ISOLATION ERROR FOR ONE OF THE LOWER REGULAR SEGMENTS! \n";
 
-    cout << "Existence of a periodic orbit for the FitzHugh-Nagumo system with parameter values theta=" << _theta << " and eps=" << _eps << " verified! \n";
+    cout << "Existence of a homoclinic orbit for the FitzHugh-Nagumo system with parameter values theta=theta(eps) in" << _theta << " and eps=" << _eps << " verified! \n";
 
 
 
   }
   catch(const char* Message)
   {
-    cout << Message << "EXISTENCE OF A HOMOCLINIC ORBIT FOR PARAMETER VALUES THETA=" << _theta << " AND EPS=" << _eps << " NOT VERIFIED! \n";
+    cout << Message << "EXISTENCE OF A HOMOCLINIC ORBIT FOR PARAMETER VALUES THETA IN " << _theta << " AND EPS=" << _eps << " NOT VERIFIED! \n";
   }
 
 

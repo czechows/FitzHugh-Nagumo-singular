@@ -40,9 +40,9 @@ class FhnBlockWithCones
     InvCB = InvCB*deltaM;
 
     CB = krawczykInverse( InvCB );
-    CB = leftVector( midVector( CB ) );
+    CB = leftVector( midVector( CB ) ); 
 
-    InvCB = krawczykInverse( CB );
+    InvCB = krawczykInverse( CB ); // we first define CB then compute CB^-1
  
     InvCB[2][0] = 0.;             // this is already done in coordChange, but just for clarity
     InvCB[2][1] = 0.; 
@@ -184,6 +184,8 @@ public:
 
   {
     shortBlock.coneConditionsVerification(); // we verify cone conditions on a shorter block
+
+    // cout << "uManblockInvCB: " << shortBlock.InvCB << "\n";
 
     IVector upLeftOverBlockSupport( interval(-1.,1.), interval( uProportion.leftBound(), 1. ), interval(-1.,1.) );
     if( !( evaluateVFinNewVariables( upLeftOverBlockSupport )[1] > 0. ) )
