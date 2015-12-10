@@ -21,7 +21,7 @@ void FhnVerifyExistenceOfHomoclinicOrbit( interval _theta, interval _eps, bool _
     IVector parameters({ _theta, _eps });
 
     IVector GammaUL(0.970345591417269, 0., 0.);                                                   // some guesses for the corner points which are equilibria
-    IVector GammaDL(0., 0., 0.);                                                                  // of the fast subsystem for critical parameter v values (third variable)
+    IVector GammaDL(0., 0., 0.);                                                                  // of the fast subsystem for critical parameter w values (third variable)
                                                                                                   // where heteroclinics exist
     IVector GammaUR(1.0, 0., 0.12);                                                               // UR up right, DR down right, UL up left, DL down left
     IVector GammaDR(-0.3, 0., 0.12);
@@ -81,7 +81,7 @@ void FhnVerifyExistenceOfHomoclinicOrbit( interval _theta, interval _eps, bool _
     // the unstable manifold block sizes
     interval ruDL(8.0e-5);    // this is yu at the downleft corner      
     setToIntegrateDL[0] = 0.8e-5*interval(-1,1);  // this is ys at downleft corner  
-    setToIntegrateDL[1] = 1.0e-5*interval(-1,1);  // this is v at downleft corner
+    setToIntegrateDL[1] = 1.0e-5*interval(-1,1);  // this is w at downleft corner
 
     uManBlockWithCones BU( *Fhn_vf, ruDL, setToIntegrateDL[0].rightBound(), setToIntegrateDL[1].rightBound() ); 
     // cone conditions are verified in the constructor of uManBlockWithCones, isolation is verified later
@@ -92,14 +92,14 @@ void FhnVerifyExistenceOfHomoclinicOrbit( interval _theta, interval _eps, bool _
 
     interval ruUR(3.0e-3);  // this is yu at the upright corner
     setToIntegrateUR[0] = 5.0e-3*interval(-1,1);  // this is ys at upright corner
-    setToIntegrateUR[1] = 7.0e-4*interval(-1,1);  // this is v at upright corner
+    setToIntegrateUR[1] = 7.0e-4*interval(-1,1);  // this is w at upright corner
 
     interval rsUL(2.1e-3);   // this is ys at the upleft corner
-    setToBackIntegrateUL[0] = 1.0e-3*interval(-1,1);     // this is v at upleft corner
+    setToBackIntegrateUL[0] = 1.0e-3*interval(-1,1);     // this is w at upleft corner
     setToBackIntegrateUL[1] = 1.8e-4*interval(-1,1);         // this is yu at upleft corner 
 
     interval rsDR(1.3e-2);   // this is ys at the downright corner
-    setToBackIntegrateDR[0] = 2.0e-3*interval(-1,1);     // this is v at downright corner 
+    setToBackIntegrateDR[0] = 2.0e-3*interval(-1,1);     // this is w at downright corner 
     setToBackIntegrateDR[1] = 0.8e-3*interval(-1,1);        // this is yu at downright corner
 
 
@@ -268,7 +268,7 @@ void FhnVerifyExistenceOfHomoclinicOrbit( interval _theta, interval _eps, bool _
     if( !( ULSegment.segmentEnclosure[0] > ULSegment.segmentEnclosure[2] ) )
       throw "MISALIGNMENT OF ONE OF THE UPPER SEGMENTS! \n";
     if( !( DRSegment.segmentEnclosure[0] < DRSegment.segmentEnclosure[2] ) )
-      throw "MISALIGNMENT OF ONE OF THE LOWER SEGMENTS! \n";      // checks on whether we are above/below u=v plane for upper/lower segments
+      throw "MISALIGNMENT OF ONE OF THE LOWER SEGMENTS! \n";      // checks on whether we are above/below u=w plane for upper/lower segments
 
     IVector UpSegment_entranceAndExitVerification( UpSegment.entranceAndExitVerification( _chainSubsegmentCountU ) );
     IVector DownSegment_entranceAndExitVerification( DownSegment.entranceAndExitVerification( _chainSubsegmentCountD ) );
@@ -295,14 +295,14 @@ void FhnVerifyExistenceOfHomoclinicOrbit( interval _theta, interval _eps, bool _
           && DownSegment_entranceAndExitVerification[2] > 0. && DownSegment_entranceAndExitVerification[3] > 0. ) )
       throw "ISOLATION ERROR FOR ONE OF THE LOWER REGULAR SEGMENTS! \n";
 
-    cout << "Existence of a homoclinic orbit for the FitzHugh-Nagumo system with parameter values theta=theta(eps) in" << _theta << " and eps=" << _eps << " verified! \n";
+    cout << "Existence of a homoclinic orbit for the FitzHugh-Nagumo system with parameter values theta=theta(eps) in " << _theta << " and eps=" << _eps << "-{0} verified! \n";
 
 
 
   }
   catch(const char* Message)
   {
-    cout << Message << "EXISTENCE OF A HOMOCLINIC ORBIT FOR PARAMETER VALUES THETA IN " << _theta << " AND EPS=" << _eps << " NOT VERIFIED! \n";
+    cout << Message << "EXISTENCE OF A HOMOCLINIC ORBIT FOR PARAMETER VALUES THETA IN " << _theta << " AND EPS=" << _eps << "-{0} NOT VERIFIED! \n";
   }
 
 

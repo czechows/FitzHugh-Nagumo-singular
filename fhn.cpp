@@ -41,13 +41,13 @@ int main(){
 
   time_t start1,end1;
 
-  Fhn_vf = new IMap("par:theta,eps;var:u,w,v;fun:w,(2/10)*(theta*w+u*(u-1)*(u-(1/10))+v),(eps/theta)*(u-v);"); 
-  // FitzHugh-Nagumo vector field is u'=w, w'=0.2*(theta*w +u*(u-1)*(u-0.1)+v, v'= eps/theta * (u-v)
-  Fhn_vf_rev = new IMap("par:theta,eps;var:u,w,v;fun:-w,(-2/10)*(theta*w+u*(u-1)*(u-(1/10))+v),(-eps/theta)*(u-v);"); 
+  Fhn_vf = new IMap("par:theta,eps;var:u,v,w;fun:v,(2/10)*(theta*v+u*(u-1)*(u-(1/10))+w),(eps/theta)*(u-w);"); 
+  // FitzHugh-Nagumo vector field is u'=v, v'=0.2*(theta*v +u*(u-1)*(u-0.1)+w, w'= eps/theta * (u-w)
+  Fhn_vf_rev = new IMap("par:theta,eps;var:u,v,w;fun:-v,(-2/10)*(theta*v+u*(u-1)*(u-(1/10))+w),(-eps/theta)*(u-w);"); 
   // reversed field for backward integration
-  Fhn_vf_withParams = new IMap("var:u,w,v,theta,eps;fun:w,(2/10)*(theta*w+u*(u-1)*(u-(1/10))+v),(eps/theta)*(u-v),0,0;"); 
+  Fhn_vf_withParams = new IMap("var:u,v,w,theta,eps;fun:v,(2/10)*(theta*v+u*(u-1)*(u-(1/10))+w),(eps/theta)*(u-w),0,0;"); 
   // the same vector field with parameters as variables of velocity 0
-  Fhn_vf_withParams_rev = new IMap("var:u,w,v,theta,eps;fun:-w,(-2/10)*(theta*w+u*(u-1)*(u-(1/10))+v),(-eps/theta)*(u-v),0,0;"); 
+  Fhn_vf_withParams_rev = new IMap("var:u,v,w,theta,eps;fun:-v,(-2/10)*(theta*v+u*(u-1)*(u-(1/10))+w),(-eps/theta)*(u-w),0,0;"); 
   // again, the reversed vector field with parameters of velocity 0
 
   time (&start1);

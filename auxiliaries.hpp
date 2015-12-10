@@ -95,7 +95,7 @@ IVector Eq_correct(IMap vectorField, const IVector guess)
   {
     oldresult = result;
     result = result - (vectorField( IVector(result, 0., guess[2]) )[1])/(vectorField[ IVector(result, 0., guess[2]) ][1][0]);  
-                                                                        // Newton algorithm to calculate zeroes of the vector field - w is always 0.,
+                                                                        // Newton algorithm to calculate zeroes of the vector field - v is always 0.,
                                                                         // derivative is of the second equation with respect to first variable - u
     error = abs(oldresult - result);
   }

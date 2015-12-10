@@ -229,13 +229,13 @@ public:
       else if( edgeIntegrationSign < 0. && !dir )
         Gamma_div = GammaLeft1;
       else if( edgeIntegrationSign == 0. && !dir )
-        Gamma_div = ( GammaRight1 - GammaLeft1 )*ti + GammaLeft1;     // subdivision of v coordinate
+        Gamma_div = ( GammaRight1 - GammaLeft1 )*ti + GammaLeft1;     // subdivision of w coordinate
       else if( edgeIntegrationSign > 0. && dir )
         Gamma_div = GammaRight2;
       else if( edgeIntegrationSign < 0. && dir )
         Gamma_div = GammaLeft2;
       else if( edgeIntegrationSign == 0. && dir )
-        Gamma_div = ( GammaRight2 - GammaLeft2 )*ti + GammaLeft2;     // subdivision of v coordinate
+        Gamma_div = ( GammaRight2 - GammaLeft2 )*ti + GammaLeft2;     // subdivision of w coordinate
       else 
         throw "SUBDIVISION ERROR";
 
@@ -275,7 +275,7 @@ public:
  
         if( i==1 && j==1)
         {
-          resultArr[0] = result[0];   // midSection coordinates are given by midP - matrix P1 evolved by var. equation so similarly to P1 we project to ys, v coords, v "unstable"
+          resultArr[0] = result[0];   // midSection coordinates are given by midP - matrix P1 evolved by var. equation so similarly to P1 we project to ys, w coords, w "unstable"
           resultArr[1] = result[2];  
           totalTime = returntime;
         }
@@ -294,7 +294,7 @@ public:
     return resultArr;
   }
 
-  bool checkCovering( const IVector& Set1, const IVector& Set2, bool _verbose )  // both Set1 and Set2 are 2-dim and have first variable stable second unstable ( Set1 : ys, v; Set2 : v, yu )
+  bool checkCovering( const IVector& Set1, const IVector& Set2, bool _verbose )  // both Set1 and Set2 are 2-dim and have first variable stable second unstable ( Set1 : ys, w; Set2 : w, yu )
   {
     IVector PSet1( integrateToMidSection( Set1, 0 ) );
     IVector PSetUL1( integrateToMidSection( leftU(Set1), 0 ) );

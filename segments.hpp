@@ -17,28 +17,28 @@ IMatrix coordChange( IMap vectorField, const IVector& Gamma ) // matrix of coord
                                                               // from straightened stable/unstable (i.e. (1,0,0), (0,1,0)) coordinates to real ones; third "neutral" variable unchanged
                                                               // doesn't need to be rigorous (and isn't) 
 {
-  int vdim( 3 );   // should be used only in dimension 3!
-  DMatrix JacobianD( vdim, vdim );
+  int wdim( 3 );   // should be used only in dimension 3!
+  DMatrix JacobianD( wdim, wdim );
 
   // a patch to set eps to 0 for the vector field for computing coordinates around slow manifold
   IMap vectorFieldZeroEps( vectorField );          
   vectorFieldZeroEps.setParameter("eps", interval(0.) );
   // WARNING: specific to the (type of) the vector field. Takes care of the problem that proof does not go for subintervals of parameter epsilon away from 0.
  
-  for(int i=0; i<vdim; i++)              // we have to convert to doubles to use computeEigenvaluesAndEigenvectors function
+  for(int i=0; i<wdim; i++)              // we have to convert to doubles to use computeEigenvaluesAndEigenvectors function
   {
-    for(int j=0; j<vdim; j++)
+    for(int j=0; j<wdim; j++)
       JacobianD[i][j] = ( ( vectorFieldZeroEps[Gamma] )[i][j] ).leftBound();
   }
 
   // temporary vectors and matrices to hold eigenvalues & imaginary parts of eigenvectors
-  DVector tempvectRe( vdim );   
-  DVector tempvectIm( vdim );
+  DVector tempvectRe( wdim );   
+  DVector tempvectIm( wdim );
 
-  DMatrix tempmatrix( vdim, vdim );
+  DMatrix tempmatrix( wdim, wdim );
   
-  DMatrix P( vdim, vdim );
-  DMatrix P_result( vdim, vdim );
+  DMatrix P( wdim, wdim );
+  DMatrix P_result( wdim, wdim );
 
   computeEigenvaluesAndEigenvectors(JacobianD, tempvectRe, tempvectIm, P, tempmatrix);
 
@@ -46,7 +46,7 @@ IMatrix coordChange( IMap vectorField, const IVector& Gamma ) // matrix of coord
   int i_med(42);
   int i_max(42); 
 
-  for( int i = 1; i <= vdim; i++ ) // sorting so we are sure we have stable coordinate first unstable second neutral third. ONLY FOR 3D vector fields!
+  for( int i = 1; i <= wdim; i++ ) // sorting so we are sure we have stable coordinate first unstable second neutral third. ONLY FOR 3D vector fields!
   {
     if( tempvectRe(i) == min( tempvectRe(1), min(tempvectRe(2), tempvectRe(3)) ) )
       i_min = i;
@@ -57,7 +57,7 @@ IMatrix coordChange( IMap vectorField, const IVector& Gamma ) // matrix of coord
   }
 
 
-  for( int i = 1; i <=vdim; i++ )
+  for( int i = 1; i <=wdim; i++ )
   { 
     P_result(i,1) = P( i, i_min );
     P_result(i,2) = P( i, i_max );
@@ -65,7 +65,7 @@ IMatrix coordChange( IMap vectorField, const IVector& Gamma ) // matrix of coord
   }
 
   // next two lines depend on the dimension and mean that we are only changing coordinates for the fast variables (2x2 matrix), slow remain unchanged (are treated as a parameter)
-  // here we explicitly assume vdim = 3 and last variable is slow!
+  // here we explicitly assume wdim = 3 and last variable is slow!
   P_result[0][2] = P_result[1][2] = P_result[2][0] = P_result[2][1] = 0.;
   P_result[2][2] = -1.;      // -1 because we add a minus in return
 
@@ -87,10 +87,10 @@ class FhnIsolatingSegment                 // class for verification of isolation
 public:
   IMap vectorField;
   IMatrix P;                              // diagonalization matrix along given slow manifold branch
-  IVector GammaLeft;                      // slow manifold left end point - this variable name is Front in the paper for segments with u>v and Rear elsewise 
-  IVector GammaRight;                     // slow manifold right end point - this variable name is Rear in the paper for segments with u>v and Front elsewise
-  IVector leftFace;                       // left face of the box (ys x yu centered at 0) = [-b,b] x [-a,a] in the paper for segments with u>v and [-d,d] x [-c,c] elsewise
-  IVector rightFace;                      // right face of the box (ys x yu centered at 0) = [-d,d] x [-c,c] in the paper for segments with u>v and [-b,b] x [-a,a] elsewise
+  IVector GammaLeft;                      // slow manifold left end point - this variable name is Front in the paper for segments with u>w and Rear elsewise 
+  IVector GammaRight;                     // slow manifold right end point - this variable name is Rear in the paper for segments with u>w and Front elsewise
+  IVector leftFace;                       // left face of the box (ys x yu centered at 0) = [-b,b] x [-a,a] in the paper for segments with u>w and [-d,d] x [-c,c] elsewise
+  IVector rightFace;                      // right face of the box (ys x yu centered at 0) = [-d,d] x [-c,c] in the paper for segments with u>w and [-b,b] x [-a,a] elsewise
   interval div;                          // number of subdivisions
   IMatrix InvP;                           // P^(-1)
   DiscreteDynSys<IMap> vectorFieldEval;   // this is only to evaluate the vector field on C0Rect2Set in most effective way - not a real dynamical system
@@ -112,7 +112,7 @@ public:
                                                                                            // slow vector field is moving in one direction only
       isABlock( _isABlock )
   {
-    // check whether the slow vector field goes in one direction, assumes the nonlinearity is const*(u-v), const>0
+    // check whether the slow vector field goes in one direction, assumes the nonlinearity is const*(u-w), const>0
     if( !isABlock )
     {
       if( !intersectionIsEmpty( IVector( {segmentEnclosure[0]} ), IVector( {segmentEnclosure[2]} ) ) )
@@ -128,7 +128,7 @@ public:
   {
     IVector normalSL( -1., 0., ( (InvP*GammaRight)[0] + rightFace[0].leftBound() - ( (InvP*GammaLeft)[0] + leftFace[0].leftBound() ) )/( GammaRight[2] - GammaLeft[2] ) );
     IVector normalSR( 1., 0., -( (InvP*GammaRight)[0] + rightFace[0].rightBound() - ( (InvP*GammaLeft)[0] + leftFace[0].rightBound() ) )/( GammaRight[2] - GammaLeft[2] ) );   
-        // ex. outward normal to (t(b-a)+a, s, t(v2-v1)+v1) is (1,0,-(b-a)/(v2-v1)) (for normalSR, with - for normalSL)
+        // ex. outward normal to (t(b-a)+a, s, t(w2-w1)+w1) is (1,0,-(b-a)/(w2-w1)) (for normalSR, with - for normalSL)
         // here a = (P-1(gammaleft))[0] + leftface[0].leftbound, b = (P-1(gammaright))[0] + rightface[0].leftbound so later we need to transform whole segment by P
         // to obtain the normal stable "left" vector
         // for normal stable "right" vector we do the same 
@@ -205,7 +205,7 @@ public:
   {    
     IVector normalUL( 0., -1., ( (InvP*GammaRight)[1] + rightFace[1].leftBound() - ( (InvP*GammaLeft)[1] + leftFace[1].leftBound() ) )/( GammaRight[2] - GammaLeft[2] ) );
     IVector normalUR( 0., 1., -( (InvP*GammaRight)[1] + rightFace[1].rightBound() - ( (InvP*GammaLeft)[1] + leftFace[1].rightBound() ) )/( GammaRight[2] - GammaLeft[2] ) );
-        // again, outward normal to (s, t(b-a)+a, t(v2-v1)+v1) is (0, 1,-(b-a)/(v2-v1)) for UR, minus that for UL
+        // again, outward normal to (s, t(b-a)+a, t(w2-w1)+w1) is (0, 1,-(b-a)/(w2-w1)) for UR, minus that for UL
         // here a = (P-1(gammaleft))[1] + leftface[1].leftbound, b = (P-1(gammaright))[1] + rightface[1].leftbound so later we need to transform whole segment by P
         // same for unstable right normal ( a > 0 )
 
@@ -406,8 +406,8 @@ public:
   FhnIsolatingBlock( IMap _vectorField, const IVector& _GammaLeft, const IVector& _GammaRight, const IMatrix& _P, const IVector& _leftFace, const IVector& _rightFace, interval _div )
   : FhnIsolatingSegment( _vectorField, _GammaLeft, _GammaRight, _P, _leftFace, _rightFace, _div, 1 ) // it is a block so we don't check whether VF is uniform in one direction
   {
-    // to obtain isolation in the central (second entry) direction we check u>v on the left slow face and u<v 
-    // on the right slow face, ONLY FOR THE FITZHUGH-NAGUMO VECTOR FIELD! -- assumes that the vector field is const(u-v), const>0
+    // to obtain isolation in the central (second entry) direction we check u>w on the left slow face and u<w 
+    // on the right slow face, ONLY FOR THE FITZHUGH-NAGUMO VECTOR FIELD! -- assumes that the vector field is const(u-w), const>0
     if( !( ( GammaRight + P*rightFace )[0] < ( GammaRight + P*rightFace )[2] 
           && ( GammaLeft + P*leftFace )[0] > ( GammaLeft + P*leftFace )[2] ) )  
     {

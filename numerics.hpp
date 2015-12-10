@@ -34,8 +34,8 @@ public:
   double homTheta;           // used only for the homoclinic case
 
   FhnBifurcation (int order, double& _theta, const DVector& _EqU, const DVector& _EqD, double _DISP, bool _dir = 1, bool _homoclinic=0) 
-    : vectorField("par:theta,v;var:u,w;fun:w,(2/10)*(theta*w+u*(u-1)*(u-(1/10))+v);"), // vector field is u'=w, w'=0.2*(theta*w +u*(u-1)*(u-0.1)+v, v is parameter
-      vectorFieldRev("par:theta,v;var:u,w;fun:-w,(-2/10)*(theta*w+u*(u-1)*(u-(1/10))+v);"), //  minus vector field for reverse integration
+    : vectorField("par:theta,w;var:u,v;fun:v,(2/10)*(theta*v+u*(u-1)*(u-(1/10))+w);"), // vector field is u'=w, w'=0.2*(theta*w +u*(u-1)*(u-0.1)+v, v is parameter
+      vectorFieldRev("par:theta,w;var:u,v;fun:-v,(-2/10)*(theta*v+u*(u-1)*(u-(1/10))+w);"), //  minus vector field for reverse integration
       solver(vectorField,order),
       solverRev(vectorFieldRev,order),
       EqU(_EqU),
@@ -52,16 +52,16 @@ public:
     vectorFieldRev.setParameter("theta",_theta);
   }
 
-  DVector Eq_correct(DVector& guess, double v)              // corrects initial guesses of u so they are closer to real equilibria, w is always 0
+  DVector Eq_correct(DVector& guess, double w)              // corrects initial guesses of u so they are closer to real equilibria, w is always 0
   {
-    vectorField.setParameter("v", v);
+    vectorField.setParameter("w", w);
     double error = 1.;
     double result = guess[0];
     double oldresult = result;
     while(error > accuracy)
     {
       oldresult = result;
-      result = result - ( vectorField(DVector({result, 0.}) )[1] / vectorField[ DVector({result, 0.}) ][1][0] );  // Newton algorithm to calculate zeroes of the vector field - w is always 0.,
+      result = result - ( vectorField(DVector({result, 0.}) )[1] / vectorField[ DVector({result, 0.}) ][1][0] );  // Newton algorithm to calculate zeroes of the vector field - v is always 0.,
                                                                                                                   // derivative is of the second equation wr. to first variable - u
       error = abs(oldresult - result);
     }
@@ -71,18 +71,18 @@ public:
     return new_Eq;
   }
 
-  DMatrix J_correct(DVector Eq, double v)
+  DMatrix J_correct(DVector Eq, double w)
   {
-    vectorField.setParameter("v", v); 
+    vectorField.setParameter("w", w); 
     return( vectorField[Eq] );
   }
 
-  double w_function(DVector guessEqU, DVector guessEqD, double v)  // returns distance in w variable on the Poincare section between integrated displacement in unstable direction from EqU
+  double v_function(DVector guessEqU, DVector guessEqD, double w)  // returns distance in v variable on the Poincare section between integrated displacement in unstable direction from EqU
                                                                    // and integrated displacement in stable direction from EqD if dir = 1 or vice-versa elsewise
   {
     double return_time = 1.;
-    vectorField.setParameter("v", v); 
-    vectorFieldRev.setParameter("v", v);
+    vectorField.setParameter("w", w); 
+    vectorFieldRev.setParameter("w", w);
 
     DMatrix EigenvectU_real(2,2),
             EigenvectU_im(2,2);
@@ -94,8 +94,8 @@ public:
     DVector EigenvalD_real(2),
             EigenvalD_im(2);   
     
-    computeEigenvaluesAndEigenvectors( J_correct(guessEqU,v), EigenvalU_real, EigenvalU_im, EigenvectU_real, EigenvectU_im );
-    computeEigenvaluesAndEigenvectors( J_correct(guessEqD,v), EigenvalD_real, EigenvalD_im, EigenvectD_real, EigenvectD_im );
+    computeEigenvaluesAndEigenvectors( J_correct(guessEqU,w), EigenvalU_real, EigenvalU_im, EigenvectU_real, EigenvectU_im );
+    computeEigenvaluesAndEigenvectors( J_correct(guessEqD,w), EigenvalD_real, EigenvalD_im, EigenvectD_real, EigenvectD_im );
 
     if(EigenvalU_real[0]*EigenvalU_real[1] >= 0.)
       throw "EIGENVALUES OF FAST SUBSYSTEM AT STATIONARY POINTS NOT OF OPPOSITE SIGNS! \n";
@@ -122,41 +122,41 @@ public:
         return pmRev(guessEqU + EigenvectU_real.column(0)*DISP, return_time)[1] - pm(guessEqD - EigenvectD_real.column(1)*DISP, return_time)[1];   
   }
 
-  double v_correct(double v) // secant method to correct v to the bifurcation point, as side effect corrects equilibria EqU and EqD to right positions 
+  double w_correct(double w) // secant method to correct w to the bifurcation point, as side effect corrects equilibria EqU and EqD to right positions 
   {
     double error = 1.;
 
-    double v0 = v + 1e-4;
-    double v1 = v;
-    double v_temp = v;
+    double w0 = w + 1e-4;
+    double w1 = w;
+    double w_temp = w;
  
-    DVector EqU0 = Eq_correct(EqU, v0);
-    DVector EqU1 = Eq_correct(EqU, v1);
-    DVector EqD0 = Eq_correct(EqD, v0);
-    DVector EqD1 = Eq_correct(EqD, v1);
+    DVector EqU0 = Eq_correct(EqU, w0);
+    DVector EqU1 = Eq_correct(EqU, w1);
+    DVector EqD0 = Eq_correct(EqD, w0);
+    DVector EqD1 = Eq_correct(EqD, w1);
  
    while(error > accuracy)
    {
-    v_temp = v1;
-    v1 = v1 - w_function(EqU1, EqD1, v1)*( (v1-v0) / ( w_function(EqU1, EqD1, v1) - w_function(EqU0, EqD0, v0) ) );
-    EqU0 = Eq_correct( EqU0, v_temp );
-    EqD0 = Eq_correct( EqD0, v_temp );
-    EqU1 = Eq_correct( EqU1, v1 );
-    EqD1 = Eq_correct( EqD1, v1 );
-    v0 = v_temp;
+    w_temp = w1;
+    w1 = w1 - v_function(EqU1, EqD1, w1)*( (w1-w0) / ( v_function(EqU1, EqD1, w1) - v_function(EqU0, EqD0, w0) ) );
+    EqU0 = Eq_correct( EqU0, w_temp );
+    EqD0 = Eq_correct( EqD0, w_temp );
+    EqU1 = Eq_correct( EqU1, w1 );
+    EqD1 = Eq_correct( EqD1, w1 );
+    w0 = w_temp;
 
-    error = abs( w_function(EqU1, EqD1, v1) );
+    error = abs( v_function(EqU1, EqD1, w1) );
    }
 
    EqU = EqU1;
    EqD = EqD1;
     
-   return v1;
+   return w1;
   }
 
   double theta_correct() // corrects homTheta to one for which a heteroclinic connection between (0,0) and an equilibrium on the upper branch of the slow manifold exists
                          // as a side effect corrects EqD to (0,0) and EqU to a correct position on the equilibrium upper branch, returns homTheta
-                         // all happens for v=0 (one needs manual readjustments if that happened for other v's)
+                         // all happens for w=0 (one needs manual readjustments if that happened for other w's)
   {
     if( !homoclinic )
       throw "Homoclinic option needs to be enabled";
@@ -183,14 +183,14 @@ public:
       vectorField.setParameter("theta",theta0);
       vectorFieldRev.setParameter("theta",theta0);
       EqU0 = Eq_correct(EqU, 0.);  
-      double w0 = w_function( EqU0, EqD0, 0. );
+      double v0 = v_function( EqU0, EqD0, 0. );
 
       vectorField.setParameter("theta",theta1);
       vectorFieldRev.setParameter("theta",theta1);
       EqU1 = Eq_correct(EqU, 0.);  
-      double w1 = w_function( EqU1, EqD1, 0. );
+      double v1 = v_function( EqU1, EqD1, 0. );
 
-      theta1 = theta1 - w1*( ( theta1 - theta0 ) / ( w1 - w0 ) );
+      theta1 = theta1 - v1*( ( theta1 - theta0 ) / ( v1 - v0 ) );
  
       vectorField.setParameter("theta",theta_temp);
       EqU0 = Eq_correct(EqU0, 0.);  
@@ -203,7 +203,7 @@ public:
       theta0 = theta_temp;
 
       vectorField.setParameter("theta",theta1);
-      error = abs( w_function(EqU1, EqD1, 0.) );
+      error = abs( v_function(EqU1, EqD1, 0.) );
     }
 
     EqU = EqU1;
@@ -220,8 +220,8 @@ void GammaQuad_correct( const interval& _theta, IVector& _GammaUL, IVector& _Gam
   double theta( _theta.leftBound() );
   double DISP(1e-12);
 
-  double vR( _GammaUR[2].leftBound() );
-  double vL( _GammaUL[2].leftBound() );
+  double wR( _GammaUR[2].leftBound() );
+  double wL( _GammaUL[2].leftBound() );
 
   DVector EqUL(2),
           EqUR(2),
@@ -242,8 +242,8 @@ void GammaQuad_correct( const interval& _theta, IVector& _GammaUL, IVector& _Gam
   FhnBifurcation BifR(order, theta, EqUR, EqDR, DISP);
   FhnBifurcation BifL(order, theta, EqUL, EqDL, DISP, 0); 
 
-  double vR_c( BifR.v_correct(vR) );        // corrected v values & equlibria coordinates
-  double vL_c( BifL.v_correct(vL) );
+  double wR_c( BifR.w_correct(wR) );        // corrected w values & equlibria coordinates
+  double wL_c( BifL.w_correct(wL) );
 
 
   DVector EqUL_c( BifL.EqU ),
@@ -263,8 +263,8 @@ void GammaQuad_correct( const interval& _theta, IVector& _GammaUL, IVector& _Gam
   _GammaDR[0] = EqDR_c[0];
   _GammaDR[1] = EqDR_c[1];
 
-  _GammaUL[2] = _GammaDL[2] = vL_c;
-  _GammaUR[2] = _GammaDR[2] = vR_c;
+  _GammaUL[2] = _GammaDL[2] = wL_c;
+  _GammaUR[2] = _GammaDR[2] = wR_c;
 }
 
 void GammaHom_correct( interval& _theta, IVector& _GammaUL, IVector& _GammaDL, IVector& _GammaUR, IVector& _GammaDR ) // corrects original guesses of Gammas for given theta, updates theta
