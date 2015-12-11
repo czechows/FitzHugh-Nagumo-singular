@@ -77,7 +77,7 @@ class FhnBlockWithCones
  
   IMatrix QepsDFc( IVector x ) // evaluates QepsDFc, Qeps = diag(1,-1,-1/eps)
   {
-    interval Q1formdat[] = {-1.,0.,0.,0.,1.,0.,0.,0.,-1.};
+    interval Q1formdat[] = {-1.,0.,0.,0.,1.,0.,0.,0.,-1.}; // this is not a typo, recall that in the program the first coordinate is stable
     IMatrix Q1(3,3,Q1formdat);
     
     IMatrix result = Q1*CB*vectorField[ InvCB*x ]*InvCB;

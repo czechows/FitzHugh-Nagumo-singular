@@ -193,7 +193,8 @@ void FhnVerifyExistenceOfPeriodicOrbit( interval _theta, interval _eps, bool _ve
     if( !( ULSegment.segmentEnclosure[0] > ULSegment.segmentEnclosure[2] ) )
       throw "MISALIGNMENT OF ONE OF THE UPPER SEGMENTS! \n";
     if( !( DLSegment.segmentEnclosure[0] < DLSegment.segmentEnclosure[2] ) )
-      throw "MISALIGNMENT OF ONE OF THE LOWER SEGMENTS! \n";      // checks on whether we are above/below u=w plane for upper/lower segments
+      throw "MISALIGNMENT OF ONE OF THE LOWER SEGMENTS! \n";      // checks on whether we are above/below u=w plane for upper/lower segments (only one point has to be,
+                                                                  // the rest follows by verification u \neq w in the constructors)
 
     IVector UpSegment_entranceAndExitVerification( UpSegment.entranceAndExitVerification( _chainSubsegmentCount ) );
     IVector DownSegment_entranceAndExitVerification( DownSegment.entranceAndExitVerification( _chainSubsegmentCount ) );

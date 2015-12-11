@@ -129,11 +129,11 @@ public:
     IVector normalSL( -1., 0., ( (InvP*GammaRight)[0] + rightFace[0].leftBound() - ( (InvP*GammaLeft)[0] + leftFace[0].leftBound() ) )/( GammaRight[2] - GammaLeft[2] ) );
     IVector normalSR( 1., 0., -( (InvP*GammaRight)[0] + rightFace[0].rightBound() - ( (InvP*GammaLeft)[0] + leftFace[0].rightBound() ) )/( GammaRight[2] - GammaLeft[2] ) );   
         // ex. outward normal to (t(b-a)+a, s, t(w2-w1)+w1) is (1,0,-(b-a)/(w2-w1)) (for normalSR, with - for normalSL)
-        // here a = (P-1(gammaleft))[0] + leftface[0].leftbound, b = (P-1(gammaright))[0] + rightface[0].leftbound so later we need to transform whole segment by P
-        // to obtain the normal stable "left" vector
-        // for normal stable "right" vector we do the same 
+        // here a = (P-1(gammaleft))[0] + leftface[0].rightbound, b = (P-1(gammaright))[0] + rightface[0].rightbound so later we need to transform whole segment by P
+        // to obtain the normal stable "right" vector
+        // for normal stable "left" vector we do the same 
     
-    normalSL = Transpose(InvP)*normalSL; // normals under affine (linear = P) transformations are transformed under inverse transpose of the transformation
+    normalSL = Transpose(InvP)*normalSL; // normals under affine transformations are transformed by the inverse transpose of the linear (P) part 
     normalSR = Transpose(InvP)*normalSR;
    
     interval NormalSLxVectorField;
@@ -145,20 +145,20 @@ public:
 
       IVector Gamma_i( ( GammaRight - GammaLeft )*ti + GammaLeft );
   
-      // stable left evaluation
+      // stable left evaluation (t is x_mu in the papers)
 
       IVector faceSL_i(3);
       faceSL_i[0] = ( rightFace[0].leftBound() - leftFace[0].leftBound() )*ti + leftFace[0].leftBound(); 
-      faceSL_i[1] = interval( ( ( rightFace[1].leftBound() - leftFace[1].leftBound() )*ti + leftFace[1].leftBound() ).leftBound(), // remove some leftBounds?
-                                      ( ( rightFace[1].rightBound() - leftFace[1].rightBound() )*ti + leftFace[1].rightBound() ).rightBound() ); // remove some rightBounds?
+      faceSL_i[1] = interval( ( ( rightFace[1].leftBound() - leftFace[1].leftBound() )*ti + leftFace[1].leftBound() ).leftBound(), 
+                                      ( ( rightFace[1].rightBound() - leftFace[1].rightBound() )*ti + leftFace[1].rightBound() ).rightBound() ); 
       faceSL_i[2] = 0.; 
 
       // stable right evaluation
 
       IVector faceSR_i(3);
       faceSR_i[0] = ( rightFace[0].rightBound() - leftFace[0].rightBound() )*ti + leftFace[0].rightBound();
-      faceSR_i[1] = interval( (  ( rightFace[1].leftBound() - leftFace[1].leftBound() )*ti + leftFace[1].leftBound() ).leftBound(), // remove some leftBounds?
-                                       ( ( rightFace[1].rightBound() - leftFace[1].rightBound() )*ti + leftFace[1].rightBound() ).rightBound() ); // remove some rightBounds?
+      faceSR_i[1] = interval( (  ( rightFace[1].leftBound() - leftFace[1].leftBound() )*ti + leftFace[1].leftBound() ).leftBound(), 
+                                       ( ( rightFace[1].rightBound() - leftFace[1].rightBound() )*ti + leftFace[1].rightBound() ).rightBound() ); 
       faceSR_i[2] = 0.;
  
       for(int j=1; j <= div; j++)
@@ -206,8 +206,8 @@ public:
     IVector normalUL( 0., -1., ( (InvP*GammaRight)[1] + rightFace[1].leftBound() - ( (InvP*GammaLeft)[1] + leftFace[1].leftBound() ) )/( GammaRight[2] - GammaLeft[2] ) );
     IVector normalUR( 0., 1., -( (InvP*GammaRight)[1] + rightFace[1].rightBound() - ( (InvP*GammaLeft)[1] + leftFace[1].rightBound() ) )/( GammaRight[2] - GammaLeft[2] ) );
         // again, outward normal to (s, t(b-a)+a, t(w2-w1)+w1) is (0, 1,-(b-a)/(w2-w1)) for UR, minus that for UL
-        // here a = (P-1(gammaleft))[1] + leftface[1].leftbound, b = (P-1(gammaright))[1] + rightface[1].leftbound so later we need to transform whole segment by P
-        // same for unstable right normal ( a > 0 )
+        // here a = (P-1(gammaleft))[1] + leftface[1].rightbound, b = (P-1(gammaright))[1] + rightface[1].rightbound so later we need to transform whole segment by P
+        // same for the unstable left normal ( a > 0 )
 
     normalUL = Transpose(InvP)*normalUL; // normals under affine transformations are transformed under inverse transpose of the transformation
     normalUR = Transpose(InvP)*normalUR;

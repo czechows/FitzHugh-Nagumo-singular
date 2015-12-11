@@ -136,9 +136,9 @@ public:
     
     IEuclNorm vectorNorm;
 
-    // here some changes! (for old version see with params construction). they dont work that great. improving frontcovering worsens backcovering & vice versa
+    // here some changes. they dont work that great so we left them commented. in short, improving frontcovering worsens backcovering & vice versa
    // IVector initialNormal = Transpose(inverseMatrix(P2)).column(0);
-  //  IVector normalVector( leftVector( midVector( Transpose( inverseMatrix( tempMonodromyMatrix ) )*initialNormal ) ) ); // THAT IS NEW! (SEE ROBERTS NOTES!)
+  //  IVector normalVector( leftVector( midVector( Transpose( inverseMatrix( tempMonodromyMatrix ) )*initialNormal ) ) ); // THAT IS NEW! (SEE ROBERT SZCZELINA NOTES!)
 
     midSection.setNormalVector( normalVector );
 
@@ -177,10 +177,10 @@ public:
                                           // as this was the unstable row of P1 in direction of which we integrated
                                           // so before the insertion this column was ~0. This should make the matrix nonsingular.
       midP(i,1) = stableDir(i);
-      midP(i,3) = unstableDir(i);         // todo: for homoclinic it would be better to compute dpm/dtheta as the unstable dir
+      midP(i,3) = unstableDir(i);         // todo: for homoclinic maybe it would be better to compute dpm/dtheta as the unstable dir
     }
 
-    orthogonalizeRelativeColumn(midP,1);
+    orthogonalizeRelativeColumn(midP,1); // that is, relative the second column
     vectorField.setParameter("theta", thetaRange );
     vectorField.setParameter("eps", epsRange );
   }
