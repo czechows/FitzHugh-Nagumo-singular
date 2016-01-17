@@ -41,17 +41,17 @@ class FhnBlockWithCones
 
     CB = krawczykInverse( InvCB );
     CB = leftVector( midVector( CB ) ); 
-
-    InvCB = krawczykInverse( CB ); // we first define CB then compute CB^-1
- 
-    InvCB[2][0] = 0.;             // this is already done in coordChange, but just for clarity
-    InvCB[2][1] = 0.; 
     
     CB[2][0] = 0.;             
     CB[2][1] = 0.; 
 
-    //if( vectalg::containsZero( IVector({det(CB)}) ) || vectalg::containsZero( IVector({det(InvCB)}) ) )
-    //  throw "Change of coordinates not invertible!";
+    InvCB = krawczykInverse( CB ); // we first define CB then compute CB^-1
+ 
+    InvCB[2][0] = 0.;             // inverse of admissible is admissible
+    InvCB[2][1] = 0.; 
+    
+ //   if( vectalg::containsZero( IVector({det(CB)}) ) || vectalg::containsZero( IVector({det(InvCB)}) ) )
+ //     throw "Change of coordinates not invertible!";
   }
 
   IVector evaluateVFinNewVariables( IVector x )

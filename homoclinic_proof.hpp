@@ -185,7 +185,6 @@ void FhnVerifyExistenceOfHomoclinicOrbit( interval _theta, interval _eps, bool _
     FhnIsolatingSegment ULSegment( *Fhn_vf, GammaUL_left, GammaUL_right, PUL, ULface, ULface, _cornerSegmentDivCount ); 
 
     
-    // this block is created only to get some coordinates for midPoincareMap
     FhnIsolatingBlock uManDLBlock( BU.createABlock( _cornerSegmentDivCount ) );  
     FhnIsolatingBlock sManDLBlock( BS.createABlock( _cornerSegmentDivCount ) );  
 
